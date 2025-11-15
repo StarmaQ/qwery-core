@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { NotebookRepositoryPort } from '@qwery/domain/repositories';
+import {
+  GetNotebookBySlugService,
+  GetNotebooksByProjectIdService,
+  GetNotebookService,
+} from '@qwery/domain/services';
 
 export function getNotebookKey(key: string) {
   return ['notebook', key];
@@ -10,26 +15,20 @@ export function getNotebooksKey() {
   return ['notebooks'];
 }
 
-export function getNotebookByProjectIdKey(projectId: string) {
+export function getNotebooksByProjectIdKey(projectId: string) {
   return ['notebooks', 'project', projectId];
 }
 
-export function useGetNotebooks(repository: NotebookRepositoryPort) {
-  return useQuery({
-    queryKey: getNotebooksKey(),
-    queryFn: () => repository.findAll(),
-    staleTime: 30 * 1000,
-  });
-}
-
-export function useGetNotebookByProjectId(
+export function useGetNotebooksByProjectId(
   repository: NotebookRepositoryPort,
-  projectId: string,
+  projectId: string | undefined,
 ) {
+  const useCase = new GetNotebooksByProjectIdService(repository);
   return useQuery({
-    queryKey: getNotebookKey(projectId),
-    queryFn: () => repository.findByProjectId(projectId),
+    queryKey: getNotebooksByProjectIdKey(projectId || ''),
+    queryFn: () => useCase.execute(projectId || ''),
     staleTime: 30 * 1000,
+    enabled: !!projectId,
   });
 }
 
@@ -37,10 +36,12 @@ export function useGetNotebook(
   repository: NotebookRepositoryPort,
   slug: string,
 ) {
+  const useCase = new GetNotebookBySlugService(repository);
   return useQuery({
     queryKey: getNotebookKey(slug),
-    queryFn: () => repository.findBySlug(slug),
+    queryFn: () => useCase.execute(slug),
     staleTime: 30 * 1000,
+    enabled: !!slug,
   });
 }
 
@@ -48,9 +49,11 @@ export function useGetNotebookById(
   repository: NotebookRepositoryPort,
   id: string,
 ) {
+  const useCase = new GetNotebookService(repository);
   return useQuery({
     queryKey: getNotebookKey(id),
-    queryFn: () => repository.findById(id),
+    queryFn: () => useCase.execute(id),
     staleTime: 30 * 1000,
+    enabled: !!id,
   });
 }

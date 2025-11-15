@@ -100,8 +100,6 @@ export function ListProjects({
                       {project.name}
                     </h3>
                     <div className="text-muted-foreground flex items-center gap-1 text-sm">
-                      <span>{project.region}</span>
-                      <span>•</span>
                       <span
                         className={`${
                           project.status === 'active'

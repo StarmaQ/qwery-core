@@ -58,6 +58,7 @@ export function WorkspaceProvider(props: React.PropsWithChildren) {
           new WorkspaceService(),
           repositories.organization,
           repositories.project,
+          repositories.notebook,
         );
         const initializedWorkspace = await initWorkspaceService.execute({
           userId: workspaceQuery.data?.userId as string,

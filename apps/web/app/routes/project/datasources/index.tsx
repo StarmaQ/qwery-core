@@ -2,7 +2,7 @@ import { Skeleton } from '@qwery/ui/skeleton';
 
 import { useWorkspace } from '~/lib/context/workspace-context';
 import { getDatasources } from '~/lib/datasources-loader';
-import { useGetDatasources } from '~/lib/queries/use-get-datasources';
+import { useGetDatasourcesByProjectId } from '~/lib/queries/use-get-datasources';
 
 import { ListDatasources } from '../_components/list-datasources';
 import { NewDatasource } from '../_components/new-datasource';
@@ -17,8 +17,11 @@ export default function ProjectDatasourcesPage({
   loaderData,
 }: Route.ComponentProps) {
   const { pluginDatasources } = loaderData;
-  const { repositories } = useWorkspace();
-  const datasources = useGetDatasources(repositories.datasource);
+  const { repositories, workspace } = useWorkspace();
+  const datasources = useGetDatasourcesByProjectId(
+    repositories.datasource,
+    workspace.projectId as string,
+  );
 
   const hasDatasources = datasources.data?.length ?? 0 > 0;
 

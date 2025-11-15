@@ -8,6 +8,7 @@ import {
 const rootRoutes = [
   route('version', 'routes/version.ts'),
   route('healthcheck', 'routes/healthcheck.ts'),
+  route('qwery/*', 'routes/ingest.$.ts'),
 ];
 
 const appRoutes = layout('routes/layout/layout.tsx', [
@@ -24,7 +25,7 @@ const orgRoutes = layout('routes/organization/layout.tsx', [
 
 const projectLayout = layout('routes/project/layout.tsx', [
   route('prj/:slug', 'routes/project/index.tsx'),
-  route('prj/:slug/notebook', 'routes/project/notebook.tsx'),
+  route('notebook/:slug', 'routes/project/notebook.tsx'),
   route('prj/:slug/ds', 'routes/project/datasources/index.tsx'),
   route('prj/:slug/ds/new', 'routes/project/datasources/sources.tsx'),
   route('prj/:slug/ds/:id/new', 'routes/project/datasources/new.tsx'),

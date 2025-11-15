@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 export * from './datasource.type';
 export * from './notebook.type';
 export * from './workspace.type';

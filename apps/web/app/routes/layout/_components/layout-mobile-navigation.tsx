@@ -18,23 +18,32 @@ export function LayoutMobileNavigation() {
   const params = useParams();
   const project_id = params.id || params.slug || '';
   const navigationConfig = createNavigationConfig(project_id);
-  const Links = navigationConfig.routes.map((item, index) => {
+  const Links = navigationConfig.routes.flatMap((item, index) => {
     if ('children' in item) {
-      return item.children.map((child) => {
-        return (
-          <DropdownLink
-            key={child.path}
-            Icon={child.Icon}
-            path={child.path}
-            label={child.label}
-          />
-        );
-      });
+      return item.children
+        .filter(
+          (
+            child,
+          ): child is { path: string; label: string; Icon?: React.ReactNode } =>
+            'path' in child && !!child.path,
+        )
+        .map((child) => {
+          return (
+            <DropdownLink
+              key={child.path}
+              Icon={child.Icon}
+              path={child.path}
+              label={child.label}
+            />
+          );
+        });
     }
 
     if ('divider' in item) {
       return <DropdownMenuSeparator key={index} />;
     }
+
+    return [];
   });
 
   return (

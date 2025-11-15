@@ -1,22 +1,23 @@
 import { v4 as uuidv4 } from 'uuid';
+import { classToPlain } from 'class-transformer';
 
-import { Roles } from '../common/roles';
+import { Roles } from '../../common/roles';
 import {
   Organization,
   OrganizationEntity,
-} from '../entities/organization.type';
-import { Project, ProjectEntity } from '../entities/project.type';
-import { User } from '../entities/user.type';
-import { OrganizationRepositoryPort } from '../repositories/organization-repository.port';
-import { ProjectRepositoryPort } from '../repositories/project-repository.port';
-import { UserRepositoryPort } from '../repositories/user-repository.port';
-import { UserUseCaseDto } from '../usecases/dto/user-usecase-dto';
-import { WorkspaceUseCaseDto } from '../usecases/dto/workspace-usecase-dto';
-import {
-  InitWorkspaceUseCase,
-  WorkspacePort,
-} from '../usecases/init-workspace-usecase';
-import { WorkspaceModeUseCase } from '../usecases/workspace-mode.usecase';
+} from '../../entities/organization.type';
+import { Project, ProjectEntity } from '../../entities/project.type';
+import { User } from '../../entities/user.type';
+import { OrganizationRepositoryPort } from '../../repositories/organization-repository.port';
+import { ProjectRepositoryPort } from '../../repositories/project-repository.port';
+import { UserRepositoryPort } from '../../repositories/user-repository.port';
+import { UserUseCaseDto } from '../../usecases/dto/user-usecase-dto';
+import { WorkspaceUseCaseDto } from '../../usecases/dto/workspace-usecase-dto';
+import { InitWorkspaceUseCase } from '../../usecases/workspace/init-workspace-usecase';
+import { WorkspaceModeUseCase } from '../../usecases/workspace/workspace-mode.usecase';
+import { NotebookRepositoryPort } from '../../repositories/notebook-repository.port';
+import { CreateNotebookService } from '../notebook/create-notebook.usecase';
+import { IWorkspaceDTO } from '../../dtos/workspace.dto';
 
 function createAnonymousUser(): User {
   const now = new Date();
@@ -30,28 +31,25 @@ function createAnonymousUser(): User {
 }
 
 function createDefaultOrganization(userId: string): Organization {
-  const organization = OrganizationEntity.new({
+  const organization = OrganizationEntity.create({
     name: 'Default Organization',
-    slug: 'default',
     is_owner: true,
     createdBy: userId,
   });
 
-  return organization.toDto<Organization>();
+  return classToPlain(organization) as Organization;
 }
 
 function createDefaultProject(orgId: string, userId: string): Project {
-  const project = ProjectEntity.new({
+  const project = ProjectEntity.create({
     org_id: orgId,
     name: 'Default Project',
-    slug: 'default',
     description: 'Default project created automatically',
-    region: 'us-east-1',
     status: 'active',
     createdBy: userId,
   });
 
-  return project.toDto<Project>();
+  return classToPlain(project) as Project;
 }
 
 export class InitWorkspaceService implements InitWorkspaceUseCase {
@@ -60,9 +58,10 @@ export class InitWorkspaceService implements InitWorkspaceUseCase {
     private readonly workspaceModeUseCase: WorkspaceModeUseCase,
     private readonly organizationRepository?: OrganizationRepositoryPort,
     private readonly projectRepository?: ProjectRepositoryPort,
+    private readonly notebookRepository?: NotebookRepositoryPort,
   ) {}
 
-  public async execute(port: WorkspacePort): Promise<WorkspaceUseCaseDto> {
+  public async execute(port: IWorkspaceDTO): Promise<WorkspaceUseCaseDto> {
     let user: User | null = null;
     let isAnonymous = false;
 
@@ -123,6 +122,22 @@ export class InitWorkspaceService implements InitWorkspaceUseCase {
           user.id,
         );
         project = await this.projectRepository.create(defaultProject);
+      }
+    }
+
+    if (project != null && this.notebookRepository) {
+      const notebooks = await this.notebookRepository.findByProjectId(
+        project.id,
+      );
+      if (!notebooks || notebooks.length === 0) {
+        const createNotebookUseCase = new CreateNotebookService(
+          this.notebookRepository,
+        );
+        await createNotebookUseCase.execute({
+          projectId: project.id,
+          title: 'Default Notebook',
+          description: 'Default notebook created automatically',
+        });
       }
     }
 

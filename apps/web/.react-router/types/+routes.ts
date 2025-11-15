@@ -20,6 +20,11 @@ type Pages = {
   "/healthcheck": {
     params: {};
   };
+  "/qwery/*": {
+    params: {
+      "*": string;
+    };
+  };
   "/organizations": {
     params: {};
   };
@@ -33,7 +38,7 @@ type Pages = {
       "slug": string;
     };
   };
-  "/prj/:slug/notebook": {
+  "/notebook/:slug": {
     params: {
       "slug": string;
     };
@@ -69,7 +74,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/version" | "/healthcheck" | "/organizations" | "/org/:slug" | "/prj/:slug" | "/prj/:slug/notebook" | "/prj/:slug/ds" | "/prj/:slug/ds/new" | "/prj/:slug/ds/:id/new" | "/ds/:slug" | "/prj/:slug/playground";
+    page: "/" | "/version" | "/healthcheck" | "/qwery/*" | "/organizations" | "/org/:slug" | "/prj/:slug" | "/notebook/:slug" | "/prj/:slug/ds" | "/prj/:slug/ds/new" | "/prj/:slug/ds/:id/new" | "/ds/:slug" | "/prj/:slug/playground";
   };
   "routes/version.ts": {
     id: "routes/version";
@@ -78,6 +83,10 @@ type RouteFiles = {
   "routes/healthcheck.ts": {
     id: "routes/healthcheck";
     page: "/healthcheck";
+  };
+  "routes/ingest.$.ts": {
+    id: "routes/ingest.$";
+    page: "/qwery/*";
   };
   "routes/layout/layout.tsx": {
     id: "routes/layout/layout";
@@ -105,7 +114,7 @@ type RouteFiles = {
   };
   "routes/project/layout.tsx": {
     id: "routes/project/layout";
-    page: "/prj/:slug" | "/prj/:slug/notebook" | "/prj/:slug/ds" | "/prj/:slug/ds/new" | "/prj/:slug/ds/:id/new" | "/ds/:slug" | "/prj/:slug/playground";
+    page: "/prj/:slug" | "/notebook/:slug" | "/prj/:slug/ds" | "/prj/:slug/ds/new" | "/prj/:slug/ds/:id/new" | "/ds/:slug" | "/prj/:slug/playground";
   };
   "routes/project/index.tsx": {
     id: "routes/project/index";
@@ -113,7 +122,7 @@ type RouteFiles = {
   };
   "routes/project/notebook.tsx": {
     id: "routes/project/notebook";
-    page: "/prj/:slug/notebook";
+    page: "/notebook/:slug";
   };
   "routes/project/datasources/index.tsx": {
     id: "routes/project/datasources/index";
@@ -141,6 +150,7 @@ type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/version": typeof import("./app/routes/version.ts");
   "routes/healthcheck": typeof import("./app/routes/healthcheck.ts");
+  "routes/ingest.$": typeof import("./app/routes/ingest.$.ts");
   "routes/layout/layout": typeof import("./app/routes/layout/layout.tsx");
   "routes/index": typeof import("./app/routes/index.tsx");
   "routes/organizations/layout": typeof import("./app/routes/organizations/layout.tsx");

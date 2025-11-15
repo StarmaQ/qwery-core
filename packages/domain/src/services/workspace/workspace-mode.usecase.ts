@@ -1,5 +1,5 @@
-import { WorkspaceModeEnum } from '../enums/workspace-mode';
-import { WorkspaceModeUseCase } from '../usecases/workspace-mode.usecase';
+import { WorkspaceModeEnum } from '../../enums/workspace-mode';
+import { WorkspaceModeUseCase } from '../../usecases/workspace/workspace-mode.usecase';
 
 export abstract class WorkspaceModeService implements WorkspaceModeUseCase {
   public abstract detectWorkspaceMode(): Promise<WorkspaceModeEnum>;

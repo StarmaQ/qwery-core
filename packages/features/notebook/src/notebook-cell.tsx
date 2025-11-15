@@ -23,7 +23,8 @@ import {
 import { AlertCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-import type { CellType, DatasourceResultSet } from '@qwery/domain/entities';
+import type { CellType } from '@qwery/domain/enums';
+import type { DatasourceResultSet } from '@qwery/domain/entities';
 import { Alert, AlertDescription } from '@qwery/ui/alert';
 import { Button } from '@qwery/ui/button';
 import {

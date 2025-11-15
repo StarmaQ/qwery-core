@@ -1,7 +1,8 @@
-import { v4 as uuidv4 } from 'uuid';
-import { z } from 'zod';
-
 import { Entity } from '../common/entity';
+import { z } from 'zod';
+import { ICreateProjectDTO, IUpdateProjectDTO } from '../dtos/project.dto';
+import { Exclude, Expose, plainToClass } from 'class-transformer';
+import { generateIdentity } from '../utils/identity.generator';
 
 export const ProjectSchema = z.object({
   id: z.string().uuid().describe('The unique identifier for the project'),
@@ -16,7 +17,6 @@ export const ProjectSchema = z.object({
     .min(1)
     .max(1024)
     .describe('The description of the project'),
-  region: z.string().min(1).max(255).describe('The region of the project'),
   status: z.string().min(1).max(255).describe('The status of the project'),
   createdAt: z.date().describe('The date and time the project was created'),
   updatedAt: z
@@ -36,67 +36,62 @@ export const ProjectSchema = z.object({
 
 export type Project = z.infer<typeof ProjectSchema>;
 
+@Exclude()
 export class ProjectEntity extends Entity<string, typeof ProjectSchema> {
-  public id: string;
-  public org_id: string;
-  public name: string;
-  public slug: string;
-  public description: string;
-  public region: string;
-  public status: string;
-  public createdAt: Date;
-  public updatedAt: Date;
-  public createdBy: string;
-  public updatedBy: string;
+  @Expose()
+  public id!: string;
+  @Expose()
+  public org_id!: string;
+  @Expose()
+  public name!: string;
+  @Expose()
+  public slug!: string;
+  @Expose()
+  public description!: string;
+  @Expose()
+  public status!: string;
+  @Expose()
+  public createdAt!: Date;
+  @Expose()
+  public updatedAt!: Date;
+  @Expose()
+  public createdBy!: string;
+  @Expose()
+  public updatedBy!: string;
 
-  constructor(data: Project) {
-    super(ProjectSchema, data.id);
-    this.id = data.id;
-    this.org_id = data.org_id;
-    this.name = data.name;
-    this.slug = data.slug;
-    this.description = data.description;
-    this.region = data.region;
-    this.status = data.status;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
-    this.createdBy = data.createdBy;
-    this.updatedBy = data.updatedBy;
-  }
-
-  protected getData(): Project {
-    return {
-      id: this.getId(),
-      org_id: this.org_id,
-      name: this.name,
-      slug: this.slug,
-      description: this.description,
-      region: this.region,
-      status: this.status,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      createdBy: this.createdBy,
-      updatedBy: this.updatedBy,
-    };
-  }
-
-  static new(
-    data: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'updatedBy'>,
-  ): ProjectEntity {
+  public static create(newProject: ICreateProjectDTO): ProjectEntity {
+    const { id, slug } = generateIdentity();
     const now = new Date();
     const project: Project = {
-      id: uuidv4(),
-      org_id: data.org_id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description,
-      region: data.region,
-      status: data.status,
+      id,
+      org_id: newProject.org_id,
+      name: newProject.name,
+      slug,
+      description: newProject.description,
+      status: newProject.status,
       createdAt: now,
       updatedAt: now,
-      createdBy: data.createdBy,
-      updatedBy: data.createdBy,
+      createdBy: newProject.createdBy,
+      updatedBy: newProject.createdBy,
     };
-    return new ProjectEntity(project);
+
+    return plainToClass(ProjectEntity, ProjectSchema.parse(project));
+  }
+
+  public static update(
+    project: Project,
+    projectDTO: IUpdateProjectDTO,
+  ): ProjectEntity {
+    const date = new Date();
+    const updatedProject: Project = {
+      ...project,
+      ...(projectDTO.name && { name: projectDTO.name }),
+      ...(projectDTO.description && { description: projectDTO.description }),
+      ...(projectDTO.status && { status: projectDTO.status }),
+      ...(projectDTO.updatedBy && { updatedBy: projectDTO.updatedBy }),
+      updatedAt: date,
+    };
+
+    return plainToClass(ProjectEntity, ProjectSchema.parse(updatedProject));
   }
 }

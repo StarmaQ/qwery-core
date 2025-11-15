@@ -60,4 +60,200 @@ export class Code {
     code: 1004,
     message: 'Entity already exists.',
   };
+
+  // Notebook - 2000-2099
+
+  public static NOTEBOOK_NOT_FOUND_ERROR: CodeDescription = {
+    code: 2000,
+    message: 'Notebook not found.',
+  };
+
+  public static NOTEBOOK_ALREADY_EXISTS_ERROR: CodeDescription = {
+    code: 2001,
+    message: 'Notebook already exists.',
+  };
+
+  public static NOTEBOOK_UPDATE_ERROR: CodeDescription = {
+    code: 2002,
+    message: 'Notebook update error.',
+  };
+
+  public static NOTEBOOK_DELETE_ERROR: CodeDescription = {
+    code: 2003,
+    message: 'Notebook delete error.',
+  };
+
+  public static NOTEBOOK_GET_ERROR: CodeDescription = {
+    code: 2004,
+    message: 'Notebook get error.',
+  };
+
+  public static NOTEBOOK_GET_ALL_ERROR: CodeDescription = {
+    code: 2005,
+    message: 'Notebook get all error.',
+  };
+
+  public static NOTEBOOK_CREATE_ERROR: CodeDescription = {
+    code: 2006,
+    message: 'Notebook create error.',
+  };
+
+  // User - 2100-2199
+
+  public static USER_NOT_FOUND_ERROR: CodeDescription = {
+    code: 2100,
+    message: 'User not found.',
+  };
+
+  public static USER_ALREADY_EXISTS_ERROR: CodeDescription = {
+    code: 2101,
+    message: 'User already exists.',
+  };
+
+  public static USER_UPDATE_ERROR: CodeDescription = {
+    code: 2102,
+    message: 'User update error.',
+  };
+
+  public static USER_DELETE_ERROR: CodeDescription = {
+    code: 2103,
+    message: 'User delete error.',
+  };
+
+  public static USER_GET_ERROR: CodeDescription = {
+    code: 2104,
+    message: 'User get error.',
+  };
+
+  public static USER_GET_ALL_ERROR: CodeDescription = {
+    code: 2105,
+    message: 'User get all error.',
+  };
+
+  public static USER_CREATE_ERROR: CodeDescription = {
+    code: 2106,
+    message: 'User create error.',
+  };
+
+  // Workspace - 2200-2299
+
+  public static WORKSPACE_NOT_FOUND_ERROR: CodeDescription = {
+    code: 2200,
+    message: 'Workspace not found.',
+  };
+
+  public static WORKSPACE_UPDATE_ERROR: CodeDescription = {
+    code: 2201,
+    message: 'Workspace update error.',
+  };
+
+  public static WORKSPACE_GET_ERROR: CodeDescription = {
+    code: 2203,
+    message: 'Workspace get error.',
+  };
+
+  public static WORKSPACE_CREATE_ERROR: CodeDescription = {
+    code: 2205,
+    message: 'Workspace create error.',
+  };
+  // Organization - 2300-2399
+
+  public static ORGANIZATION_NOT_FOUND_ERROR: CodeDescription = {
+    code: 2300,
+    message: 'Organization not found.',
+  };
+
+  public static ORGANIZATION_UPDATE_ERROR: CodeDescription = {
+    code: 2301,
+    message: 'Organization update error.',
+  };
+
+  public static ORGANIZATION_DELETE_ERROR: CodeDescription = {
+    code: 2302,
+    message: 'Organization delete error.',
+  };
+
+  public static ORGANIZATION_GET_ERROR: CodeDescription = {
+    code: 2303,
+    message: 'Organization get error.',
+  };
+
+  public static ORGANIZATION_GET_ALL_ERROR: CodeDescription = {
+    code: 2304,
+    message: 'Organization get all error.',
+  };
+
+  public static ORGANIZATION_CREATE_ERROR: CodeDescription = {
+    code: 2305,
+    message: 'Organization create error.',
+  };
+
+  // Project - 2400-2499
+
+  public static PROJECT_NOT_FOUND_ERROR: CodeDescription = {
+    code: 2400,
+    message: 'Project not found.',
+  };
+
+  public static PROJECT_UPDATE_ERROR: CodeDescription = {
+    code: 2401,
+    message: 'Project update error.',
+  };
+
+  public static PROJECT_DELETE_ERROR: CodeDescription = {
+    code: 2402,
+    message: 'Project delete error.',
+  };
+
+  public static PROJECT_GET_ERROR: CodeDescription = {
+    code: 2403,
+    message: 'Project get error.',
+  };
+
+  public static PROJECT_GET_ALL_ERROR: CodeDescription = {
+    code: 2404,
+    message: 'Project get all error.',
+  };
+
+  public static PROJECT_CREATE_ERROR: CodeDescription = {
+    code: 2405,
+    message: 'Project create error.',
+  };
+
+  // Datasource - 2500-2599
+
+  public static DATASOURCE_NOT_FOUND_ERROR: CodeDescription = {
+    code: 2500,
+    message: 'Datasource not found.',
+  };
+
+  public static DATASOURCE_ALREADY_EXISTS_ERROR: CodeDescription = {
+    code: 2501,
+    message: 'Datasource already exists.',
+  };
+
+  public static DATASOURCE_UPDATE_ERROR: CodeDescription = {
+    code: 2502,
+    message: 'Datasource update error.',
+  };
+
+  public static DATASOURCE_DELETE_ERROR: CodeDescription = {
+    code: 2503,
+    message: 'Datasource delete error.',
+  };
+
+  public static DATASOURCE_GET_ERROR: CodeDescription = {
+    code: 2504,
+    message: 'Datasource get error.',
+  };
+
+  public static DATASOURCE_GET_ALL_ERROR: CodeDescription = {
+    code: 2505,
+    message: 'Datasource get all error.',
+  };
+
+  public static DATASOURCE_CREATE_ERROR: CodeDescription = {
+    code: 2506,
+    message: 'Datasource create error.',
+  };
 }

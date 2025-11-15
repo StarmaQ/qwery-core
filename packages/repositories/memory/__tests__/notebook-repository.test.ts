@@ -20,7 +20,6 @@ describe('NotebookRepository', () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',
@@ -43,7 +42,7 @@ describe('NotebookRepository', () => {
       const result = await repository.create(notebook);
 
       expect(result).toEqual(notebook);
-      expect(result.name).toBe('Test Notebook');
+      expect(result.title).toBe('Test Notebook Title');
       expect(result.slug).toBe('test-notebook');
     });
   });
@@ -53,7 +52,6 @@ describe('NotebookRepository', () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',
@@ -81,7 +79,6 @@ describe('NotebookRepository', () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',
@@ -110,7 +107,6 @@ describe('NotebookRepository', () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',
@@ -124,8 +120,8 @@ describe('NotebookRepository', () => {
       await repository.create(notebook);
       const found = await repository.findByProjectId(projectId1);
 
-      expect(found).toEqual(notebook);
-      expect(found?.projectId).toBe(projectId1);
+      expect(found).toEqual([notebook]);
+      expect(found?.[0]?.projectId).toBe(projectId1);
     });
 
     it('should return null when project id not found', async () => {
@@ -137,7 +133,6 @@ describe('NotebookRepository', () => {
       const notebook1: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Notebook 1',
         title: 'Notebook 1 Title',
         description: 'First notebook',
         slug: 'notebook-1',
@@ -151,7 +146,6 @@ describe('NotebookRepository', () => {
       const notebook2: Notebook = {
         id: validUuid2,
         projectId: projectId1,
-        name: 'Notebook 2',
         title: 'Notebook 2 Title',
         description: 'Second notebook',
         slug: 'notebook-2',
@@ -167,7 +161,8 @@ describe('NotebookRepository', () => {
 
       const found = await repository.findByProjectId(projectId1);
       expect(found).toBeDefined();
-      expect(found?.projectId).toBe(projectId1);
+      expect(found).toHaveLength(2);
+      expect(found?.[0]?.projectId).toBe(projectId1);
     });
   });
 
@@ -181,7 +176,6 @@ describe('NotebookRepository', () => {
       const notebook1: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Notebook 1',
         title: 'Notebook 1 Title',
         description: 'First notebook',
         slug: 'notebook-1',
@@ -195,7 +189,6 @@ describe('NotebookRepository', () => {
       const notebook2: Notebook = {
         id: validUuid2,
         projectId: projectId2,
-        name: 'Notebook 2',
         title: 'Notebook 2 Title',
         description: 'Second notebook',
         slug: 'notebook-2',
@@ -220,7 +213,6 @@ describe('NotebookRepository', () => {
         const notebook: Notebook = {
           id: `01ARZ3NDEKTSV4RRFFQ69G5F${i}`,
           projectId: projectId1,
-          name: `Notebook ${i}`,
           title: `Notebook ${i} Title`,
           description: `Description ${i}`,
           slug: `notebook-${i}`,
@@ -243,7 +235,6 @@ describe('NotebookRepository', () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',
@@ -258,7 +249,7 @@ describe('NotebookRepository', () => {
 
       const updatedNotebook: Notebook = {
         ...notebook,
-        name: 'Updated Notebook',
+        title: 'Updated Notebook',
         version: 2,
         cells: [
           {
@@ -274,19 +265,18 @@ describe('NotebookRepository', () => {
 
       const result = await repository.update(updatedNotebook);
 
-      expect(result.name).toBe('Updated Notebook');
+      expect(result.title).toBe('Updated Notebook');
       expect(result.version).toBe(2);
       expect(result.cells).toHaveLength(1);
 
       const found = await repository.findById(validUuid1);
-      expect(found?.name).toBe('Updated Notebook');
+      expect(found?.title).toBe('Updated Notebook');
     });
 
     it('should throw error when updating non-existent notebook', async () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',
@@ -308,7 +298,6 @@ describe('NotebookRepository', () => {
       const notebook: Notebook = {
         id: validUuid1,
         projectId: projectId1,
-        name: 'Test Notebook',
         title: 'Test Notebook Title',
         description: 'A test notebook',
         slug: 'test-notebook',

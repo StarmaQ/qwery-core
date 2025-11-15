@@ -165,7 +165,7 @@ export class NotebookRepository extends NotebookRepositoryPort {
     });
   }
 
-  async findByProjectId(projectId: string): Promise<Notebook | null> {
+  async findByProjectId(projectId: string): Promise<Notebook[] | null> {
     await this.init();
 
     return new Promise((resolve, reject) => {
@@ -177,21 +177,22 @@ export class NotebookRepository extends NotebookRepositoryPort {
       const transaction = this.db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const index = store.index('project_id');
-      const request = index.get(projectId);
+      const request = index.getAll(projectId);
 
       request.onerror = () => {
         reject(
-          new Error(`Failed to fetch notebook: ${request.error?.message}`),
+          new Error(`Failed to fetch notebooks: ${request.error?.message}`),
         );
       };
 
       request.onsuccess = () => {
-        const result = request.result;
-        if (!result) {
+        const results = request.result as Record<string, unknown>[];
+        if (!results || results.length === 0) {
           resolve(null);
           return;
         }
-        resolve(this.deserialize(result as Record<string, unknown>));
+        const notebooks = results.map((item) => this.deserialize(item));
+        resolve(notebooks);
       };
     });
   }

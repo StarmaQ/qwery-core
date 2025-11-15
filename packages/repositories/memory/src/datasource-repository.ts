@@ -26,6 +26,14 @@ export class DatasourceRepository extends DatasourceRepositoryPort {
     return datasources.find((datasource) => datasource.slug === slug) ?? null;
   }
 
+  async findByProjectId(projectId: string): Promise<Datasource[] | null> {
+    const datasources = Array.from(this.datasources.values());
+    const filtered = datasources.filter(
+      (datasource) => datasource.projectId === projectId,
+    );
+    return filtered.length > 0 ? filtered : null;
+  }
+
   async create(entity: Datasource): Promise<Datasource> {
     this.datasources.set(entity.id, entity);
     return entity;

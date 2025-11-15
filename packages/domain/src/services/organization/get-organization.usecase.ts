@@ -1,0 +1,46 @@
+import { Code } from '../../common/code';
+import { DomainException } from '../../exceptions';
+import { OrganizationRepositoryPort } from '../../repositories/organization-repository.port';
+import {
+  GetOrganizationBySlugUseCase,
+  GetOrganizationUseCase,
+  OrganizationUseCaseDto,
+} from '../../usecases';
+
+export class GetOrganizationService implements GetOrganizationUseCase {
+  constructor(
+    private readonly organizationRepository: OrganizationRepositoryPort,
+  ) {}
+
+  public async execute(id: string): Promise<OrganizationUseCaseDto> {
+    const organization = await this.organizationRepository.findById(id);
+    if (!organization) {
+      throw DomainException.new({
+        code: Code.ORGANIZATION_NOT_FOUND_ERROR,
+        overrideMessage: `Organization with id '${id}' not found`,
+        data: { organizationId: id },
+      });
+    }
+    return OrganizationUseCaseDto.new(organization);
+  }
+}
+
+export class GetOrganizationBySlugService
+  implements GetOrganizationBySlugUseCase
+{
+  constructor(
+    private readonly organizationRepository: OrganizationRepositoryPort,
+  ) {}
+
+  public async execute(id: string): Promise<OrganizationUseCaseDto> {
+    const organization = await this.organizationRepository.findBySlug(id);
+    if (!organization) {
+      throw DomainException.new({
+        code: Code.ORGANIZATION_NOT_FOUND_ERROR,
+        overrideMessage: `Organization with id '${id}' not found`,
+        data: { organizationId: id },
+      });
+    }
+    return OrganizationUseCaseDto.new(organization);
+  }
+}

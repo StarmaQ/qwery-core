@@ -156,6 +156,38 @@ export class DatasourceRepository extends DatasourceRepositoryPort {
     });
   }
 
+  async findByProjectId(projectId: string): Promise<Datasource[] | null> {
+    await this.init();
+
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error('Database not initialized'));
+        return;
+      }
+
+      const transaction = this.db.transaction([STORE_NAME], 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index('projectId');
+      const request = index.getAll(projectId);
+
+      request.onerror = () => {
+        reject(
+          new Error(`Failed to fetch datasources: ${request.error?.message}`),
+        );
+      };
+
+      request.onsuccess = () => {
+        const results = request.result as Record<string, unknown>[];
+        if (!results || results.length === 0) {
+          resolve(null);
+          return;
+        }
+        const datasources = results.map((item) => this.deserialize(item));
+        resolve(datasources);
+      };
+    });
+  }
+
   async create(entity: Datasource): Promise<Datasource> {
     await this.init();
 

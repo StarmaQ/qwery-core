@@ -5,10 +5,21 @@ import { NavigationConfigSchema } from '@qwery/ui/navigation-schema';
 
 import pathsConfig from './paths.config';
 import { createPath } from './qwery.navigation.config';
+import { NotebookUseCaseDto } from '@qwery/domain/usecases';
 
 const iconClasses = 'w-4';
 
-const getRoutes = (slug: string) =>
+const getNotebookRoutes = (notebooks: NotebookUseCaseDto[]) => {
+  return notebooks.map((notebook) => {
+    return {
+      label: notebook.title,
+      path: createPath(pathsConfig.app.projectNotebook, notebook.slug),
+      Icon: <Notebook className={iconClasses} />,
+    };
+  });
+};
+
+const getRoutes = (slug: string, notebooks: NotebookUseCaseDto[]) =>
   [
     {
       label: 'common:routes.project',
@@ -27,17 +38,21 @@ const getRoutes = (slug: string) =>
         },
         {
           label: 'common:routes.notebook',
-          path: createPath(pathsConfig.app.projectNotebook, slug),
           Icon: <Notebook className={iconClasses} />,
-          end: true,
+          collapsible: true,
+          collapsed: true,
+          children: getNotebookRoutes(notebooks),
         },
       ],
     },
   ] satisfies z.infer<typeof NavigationConfigSchema>['routes'];
 
-export function createNavigationConfig(slug: string) {
+export function createNavigationConfig(
+  slug: string,
+  notebooks: NotebookUseCaseDto[] | undefined,
+) {
   return NavigationConfigSchema.parse({
-    routes: getRoutes(slug),
+    routes: getRoutes(slug, notebooks || []),
   });
 }
 

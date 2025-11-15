@@ -21,7 +21,7 @@ export function shortenId(id: string): string {
   let hash3 = 0;
 
   for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i] ?? 0;
+    const byte = bytes[i]!; // Safe: loop guarantees i < bytes.length
     // Simple hash functions that distribute well
     hash1 = ((hash1 << 5) - hash1 + byte) | 0; // DJB2-like
     hash2 = (hash2 * 33 + byte) | 0; // Simple multiplicative
@@ -37,17 +37,9 @@ export function shortenId(id: string): string {
     Math.abs(hash3) % MAX_SAFE,
   ];
 
-  // Encode with minLength 10
+  // Encode with minLength 10 - will return at least 10 characters (typically 14+)
   const encoded = sqids.encode(numbers);
 
-  // Ensure exactly 10 characters
-  if (encoded.length === 10) {
-    return encoded;
-  } else if (encoded.length > 10) {
-    // Truncate if longer (shouldn't happen but be safe)
-    return encoded.slice(0, 10);
-  } else {
-    // Pad if shorter (shouldn't happen with minLength 10)
-    return encoded.padEnd(10, encoded[encoded.length - 1] || 'a');
-  }
+  // Truncate to exactly 10 characters (sqids with minLength 10 always returns > 10)
+  return encoded.slice(0, 10);
 }

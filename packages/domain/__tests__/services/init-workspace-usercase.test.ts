@@ -4,12 +4,14 @@ import { Roles } from '../../src/common/roles';
 import type { Organization } from '../../src/entities/organization.type';
 import type { Project } from '../../src/entities/project.type';
 import type { User } from '../../src/entities/user.type';
+import type { Notebook } from '../../src/entities/notebook.type';
 import { WorkspaceModeEnum } from '../../src/enums/workspace-mode';
 import type { OrganizationRepositoryPort } from '../../src/repositories/organization-repository.port';
 import type { ProjectRepositoryPort } from '../../src/repositories/project-repository.port';
 import type { UserRepositoryPort } from '../../src/repositories/user-repository.port';
-import { InitWorkspaceService } from '../../src/services/init-workspace-usercase';
-import type { WorkspaceModeUseCase } from '../../src/usecases/workspace-mode.usecase';
+import type { NotebookRepositoryPort } from '../../src/repositories/notebook-repository.port';
+import { InitWorkspaceService } from '../../src/services/workspace/init-workspace-usercase';
+import type { WorkspaceModeUseCase } from '../../src/usecases/workspace/workspace-mode.usecase';
 
 // Mock in-memory repositories
 class MockUserRepository implements UserRepositoryPort {
@@ -126,6 +128,50 @@ class MockProjectRepository implements ProjectRepositoryPort {
   }
 }
 
+class MockNotebookRepository implements NotebookRepositoryPort {
+  private notebooks = new Map<string, Notebook>();
+
+  async findAll() {
+    return Array.from(this.notebooks.values());
+  }
+
+  async findById(id: string) {
+    return this.notebooks.get(id) ?? null;
+  }
+
+  async findBySlug(slug: string) {
+    const notebooks = Array.from(this.notebooks.values());
+    return notebooks.find((n) => n.slug === slug) ?? null;
+  }
+
+  async findByProjectId(projectId: string) {
+    const notebooks = Array.from(this.notebooks.values());
+    const filtered = notebooks.filter((n) => n.projectId === projectId);
+    return filtered.length > 0 ? filtered : null;
+  }
+
+  async create(entity: Notebook) {
+    this.notebooks.set(entity.id, entity);
+    return entity;
+  }
+
+  async update(entity: Notebook) {
+    if (!this.notebooks.has(entity.id)) {
+      throw new Error(`Notebook with id ${entity.id} not found`);
+    }
+    this.notebooks.set(entity.id, entity);
+    return entity;
+  }
+
+  async delete(id: string) {
+    return this.notebooks.delete(id);
+  }
+
+  shortenId(id: string) {
+    return id.slice(0, 8);
+  }
+}
+
 describe('InitWorkspaceService', () => {
   let userRepository: MockUserRepository;
   let organizationRepository: MockOrganizationRepository;
@@ -204,7 +250,7 @@ describe('InitWorkspaceService', () => {
 
       expect(result.organization).toBeDefined();
       expect(result.organization?.name).toBe('Default Organization');
-      expect(result.organization?.slug).toBe('default');
+      expect(result.organization?.slug).toBeDefined(); // slug is auto-generated now
       expect(result.organization?.is_owner).toBe(true);
     });
 
@@ -297,9 +343,9 @@ describe('InitWorkspaceService', () => {
 
       expect(result.project).toBeDefined();
       expect(result.project?.name).toBe('Default Project');
-      expect(result.project?.slug).toBe('default');
+      expect(result.project?.slug).toBeDefined(); // slug is auto-generated now
       expect(result.project?.status).toBe('active');
-      expect(result.project?.region).toBe('us-east-1');
+      // region field was removed
     });
 
     it('should use existing project when projectId provided', async () => {
@@ -337,7 +383,6 @@ describe('InitWorkspaceService', () => {
         name: 'First Project',
         slug: 'first-project',
         description: 'First project',
-        region: 'us-east-1',
         status: 'active',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -351,7 +396,6 @@ describe('InitWorkspaceService', () => {
         name: 'Second Project',
         slug: 'second-project',
         description: 'Second project',
-        region: 'us-west-2',
         status: 'active',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -548,6 +592,105 @@ describe('InitWorkspaceService', () => {
       // Should create default project when findById fails
       expect(result.project).toBeDefined();
       expect(result.project?.name).toBe('Default Project');
+    });
+  });
+
+  describe('notebook handling', () => {
+    it('should create default notebook when project exists and no notebooks found', async () => {
+      const notebookRepository = new MockNotebookRepository();
+      const serviceWithNotebook = new InitWorkspaceService(
+        userRepository,
+        workspaceModeUseCase,
+        organizationRepository,
+        projectRepository,
+        notebookRepository,
+      );
+
+      const result = await serviceWithNotebook.execute({ userId: '' });
+
+      expect(result.project).toBeDefined();
+      const notebooks = await notebookRepository.findByProjectId(
+        result.project!.id,
+      );
+      expect(notebooks).not.toBeNull();
+      expect(notebooks!.length).toBeGreaterThan(0);
+      expect(notebooks![0].title).toBe('Default Notebook');
+    });
+
+    it('should not create notebook when notebooks already exist', async () => {
+      const notebookRepository = new MockNotebookRepository();
+      const serviceWithNotebook = new InitWorkspaceService(
+        userRepository,
+        workspaceModeUseCase,
+        organizationRepository,
+        projectRepository,
+        notebookRepository,
+      );
+
+      // Create a project first
+      const result1 = await serviceWithNotebook.execute({ userId: '' });
+      const projectId = result1.project!.id;
+
+      // Get initial notebook count
+      const initialNotebooks =
+        await notebookRepository.findByProjectId(projectId);
+      const initialCount = initialNotebooks?.length ?? 0;
+
+      // Execute again - should not create another notebook
+      await serviceWithNotebook.execute({ userId: '' });
+
+      const finalNotebooks =
+        await notebookRepository.findByProjectId(projectId);
+      expect(finalNotebooks?.length).toBe(initialCount);
+    });
+
+    it('should not create notebook when notebookRepository is not provided', async () => {
+      const result = await service.execute({ userId: '' });
+
+      expect(result.project).toBeDefined();
+      // Service should work fine without notebook repository
+      expect(result).toBeDefined();
+    });
+
+    it('should handle organization without id when creating project', async () => {
+      const notebookRepository = new MockNotebookRepository();
+      const serviceWithNotebook = new InitWorkspaceService(
+        userRepository,
+        workspaceModeUseCase,
+        organizationRepository,
+        projectRepository,
+        notebookRepository,
+      );
+
+      // Create an organization with empty string id to test the fallback (line 123: organization.id || uuidv4())
+      const org: Organization = {
+        id: '', // Empty string is falsy, will trigger uuidv4() fallback
+        name: 'Test Org',
+        slug: 'test-org',
+        is_owner: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: userId,
+        updatedBy: userId,
+      };
+      await organizationRepository.create(org);
+
+      // Mock findAll to return the org with empty id
+      const originalFindAll = organizationRepository.findAll;
+      organizationRepository.findAll = vi.fn().mockResolvedValue([org]);
+
+      try {
+        const result = await serviceWithNotebook.execute({ userId: '' });
+        // Should still create project successfully using uuidv4() fallback (line 123)
+        expect(result.project).toBeDefined();
+        expect(result.project?.org_id).toBeDefined();
+        // The org_id should be a valid UUID (from uuidv4() fallback)
+        expect(result.project?.org_id).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        );
+      } finally {
+        organizationRepository.findAll = originalFindAll;
+      }
     });
   });
 });

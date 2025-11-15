@@ -1,7 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
-import { z } from 'zod';
-
 import { Entity } from '../common/entity';
+import { z } from 'zod';
+import {
+  ICreateOrganizationDTO,
+  IUpdateOrganizationDTO,
+} from '../dtos/organization.dto';
+import { Exclude, Expose, plainToClass } from 'class-transformer';
+import { generateIdentity } from '../utils/identity.generator';
 
 /**
  * Organization schema
@@ -37,58 +41,70 @@ export const OrganizationSchema = z.object({
 
 export type Organization = z.infer<typeof OrganizationSchema>;
 
+@Exclude()
 export class OrganizationEntity extends Entity<
   string,
   typeof OrganizationSchema
 > {
-  public id: string;
-  public name: string;
-  public slug: string;
-  public is_owner: boolean;
-  public createdAt: Date;
-  public updatedAt: Date;
-  public createdBy: string;
-  public updatedBy: string;
+  @Expose()
+  public id!: string;
+  @Expose()
+  public name!: string;
+  @Expose()
+  public slug!: string;
+  @Expose()
+  public is_owner!: boolean;
+  @Expose()
+  public createdAt!: Date;
+  @Expose()
+  public updatedAt!: Date;
+  @Expose()
+  public createdBy!: string;
+  @Expose()
+  public updatedBy!: string;
 
-  constructor(data: Organization) {
-    super(OrganizationSchema, data.id);
-    this.id = data.id;
-    this.name = data.name;
-    this.slug = data.slug;
-    this.is_owner = data.is_owner;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
-    this.createdBy = data.createdBy;
-    this.updatedBy = data.updatedBy;
-  }
-
-  protected getData(): Organization {
-    return {
-      id: this.getId(),
-      name: this.name,
-      slug: this.slug,
-      is_owner: this.is_owner,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      createdBy: this.createdBy,
-      updatedBy: this.updatedBy,
-    };
-  }
-
-  static new(
-    data: Omit<Organization, 'id' | 'createdAt' | 'updatedAt' | 'updatedBy'>,
+  public static create(
+    newOrganization: ICreateOrganizationDTO,
   ): OrganizationEntity {
+    const { id, slug } = generateIdentity();
     const now = new Date();
     const organization: Organization = {
-      id: uuidv4(),
-      name: data.name,
-      slug: data.slug,
-      is_owner: data.is_owner,
+      id,
+      name: newOrganization.name,
+      slug,
+      is_owner: newOrganization.is_owner,
       createdAt: now,
       updatedAt: now,
-      createdBy: data.createdBy,
-      updatedBy: data.createdBy,
+      createdBy: newOrganization.createdBy,
+      updatedBy: newOrganization.createdBy,
     };
-    return new OrganizationEntity(organization);
+
+    return plainToClass(
+      OrganizationEntity,
+      OrganizationSchema.parse(organization),
+    );
+  }
+
+  public static update(
+    organization: Organization,
+    organizationDTO: IUpdateOrganizationDTO,
+  ): OrganizationEntity {
+    const date = new Date();
+    const updatedOrganization: Organization = {
+      ...organization,
+      ...(organizationDTO.name && { name: organizationDTO.name }),
+      ...(organizationDTO.is_owner !== undefined && {
+        is_owner: organizationDTO.is_owner,
+      }),
+      ...(organizationDTO.updatedBy && {
+        updatedBy: organizationDTO.updatedBy,
+      }),
+      updatedAt: date,
+    };
+
+    return plainToClass(
+      OrganizationEntity,
+      OrganizationSchema.parse(updatedOrganization),
+    );
   }
 }

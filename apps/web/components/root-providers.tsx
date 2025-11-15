@@ -13,6 +13,7 @@ import { getI18nSettings } from '~/lib/i18n/i18n.settings';
 
 import { ReactQueryProvider } from './react-query-provider';
 import { WorkspaceProvider } from './workspace-provider';
+import { TelemetryProvider } from '@qwery/telemetry';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -30,23 +31,29 @@ export function RootProviders(
   return (
     <Suspense>
       <I18nProvider settings={settings} resolver={i18nResolver}>
-        <Toaster richColors={true} theme={props.theme} position="top-center" />
+        <TelemetryProvider>
+          <Toaster
+            richColors={true}
+            theme={props.theme}
+            position="top-center"
+          />
 
-        <ClientOnly>
-          <GlobalLoader displaySpinner={false} />
-        </ClientOnly>
-        <ReactQueryProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-          <ThemeProvider
-            attribute="class"
-            enableSystem
-            disableTransitionOnChange
-            defaultTheme={props.theme}
-            enableColorScheme={false}
-          >
-            <WorkspaceProvider>{props.children}</WorkspaceProvider>
-          </ThemeProvider>
-        </ReactQueryProvider>
+          <ClientOnly>
+            <GlobalLoader displaySpinner={false} />
+          </ClientOnly>
+          <ReactQueryProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+            <ThemeProvider
+              attribute="class"
+              enableSystem
+              disableTransitionOnChange
+              defaultTheme={props.theme}
+              enableColorScheme={false}
+            >
+              <WorkspaceProvider>{props.children}</WorkspaceProvider>
+            </ThemeProvider>
+          </ReactQueryProvider>
+        </TelemetryProvider>
       </I18nProvider>
     </Suspense>
   );

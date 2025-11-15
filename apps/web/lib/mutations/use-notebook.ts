@@ -1,13 +1,19 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { Notebook } from '@qwery/domain/entities';
 import { NotebookRepositoryPort } from '@qwery/domain/repositories';
+import {
+  getNotebookKey,
+  getNotebooksByProjectIdKey,
+} from '../queries/use-get-notebook';
 
 export function useNotebook(
   notebookRepository: NotebookRepositoryPort,
-  onSuccess: () => void,
+  onSuccess: (notebook: Notebook) => void,
   onError: (error: Error) => void,
 ) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (notebook: Notebook) => {
       // Check if notebook exists by trying to find it
@@ -20,7 +26,15 @@ export function useNotebook(
         return await notebookRepository.create(notebook);
       }
     },
-    onSuccess,
+    onSuccess: (notebook: Notebook) => {
+      queryClient.invalidateQueries({
+        queryKey: getNotebookKey(notebook.slug),
+      });
+      queryClient.invalidateQueries({
+        queryKey: getNotebooksByProjectIdKey(notebook.projectId),
+      });
+      onSuccess(notebook);
+    },
     onError,
   });
 }

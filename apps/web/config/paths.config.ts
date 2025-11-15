@@ -63,7 +63,7 @@ const pathsConfig = PathsSchema.parse({
     projectDatasourceView: '/ds/[slug]',
     availableSources: '/prj/[slug]/ds/new',
     newProjectDatasource: '/prj/[slug]/ds/[name]/new',
-    projectNotebook: '/prj/[slug]/notebook',
+    projectNotebook: '/notebook/[slug]',
     projectPlayground: '/prj/[slug]/playground',
   },
 } satisfies z.infer<typeof PathsSchema>);

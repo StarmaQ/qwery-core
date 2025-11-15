@@ -1,4 +1,7 @@
+import { Entity } from '../common/entity';
 import { z } from 'zod';
+import { IUpdateDatasourceDTO } from '../dtos/datasource.dto';
+import { Exclude, Expose, plainToClass } from 'class-transformer';
 
 export enum DatasourceKind {
   EMBEDDED = 'embedded',
@@ -36,3 +39,64 @@ export const DatasourceSchema = z.object({
 });
 
 export type Datasource = z.infer<typeof DatasourceSchema>;
+
+@Exclude()
+export class DatasourceEntity extends Entity<string, typeof DatasourceSchema> {
+  @Expose()
+  public id!: string;
+  @Expose()
+  public projectId!: string;
+  @Expose()
+  public name!: string;
+  @Expose()
+  public description!: string;
+  @Expose()
+  public slug!: string;
+  @Expose()
+  public datasource_provider!: string;
+  @Expose()
+  public datasource_driver!: string;
+  @Expose()
+  public datasource_kind!: DatasourceKind;
+  @Expose()
+  public config!: Record<string, unknown>;
+  @Expose()
+  public createdAt!: Date;
+  @Expose()
+  public updatedAt!: Date;
+  @Expose()
+  public createdBy!: string;
+  @Expose()
+  public updatedBy!: string;
+
+  public static update(
+    datasource: Datasource,
+    datasourceDTO: IUpdateDatasourceDTO,
+  ): DatasourceEntity {
+    const date = new Date();
+    const updatedDatasource: Datasource = {
+      ...datasource,
+      ...(datasourceDTO.name && { name: datasourceDTO.name }),
+      ...(datasourceDTO.description && {
+        description: datasourceDTO.description,
+      }),
+      ...(datasourceDTO.datasource_provider && {
+        datasource_provider: datasourceDTO.datasource_provider,
+      }),
+      ...(datasourceDTO.datasource_driver && {
+        datasource_driver: datasourceDTO.datasource_driver,
+      }),
+      ...(datasourceDTO.datasource_kind && {
+        datasource_kind: datasourceDTO.datasource_kind as DatasourceKind,
+      }),
+      ...(datasourceDTO.config && { config: datasourceDTO.config }),
+      ...(datasourceDTO.updatedBy && { updatedBy: datasourceDTO.updatedBy }),
+      updatedAt: date,
+    };
+
+    return plainToClass(
+      DatasourceEntity,
+      DatasourceSchema.parse(updatedDatasource),
+    );
+  }
+}

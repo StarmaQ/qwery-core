@@ -26,11 +26,12 @@ export class NotebookRepository extends NotebookRepositoryPort {
     return notebooks.find((notebook) => notebook.slug === slug) ?? null;
   }
 
-  async findByProjectId(projectId: string): Promise<Notebook | null> {
+  async findByProjectId(projectId: string): Promise<Notebook[] | null> {
     const notebooks = Array.from(this.notebooks.values());
-    return (
-      notebooks.find((notebook) => notebook.projectId === projectId) ?? null
+    const filtered = notebooks.filter(
+      (notebook) => notebook.projectId === projectId,
     );
+    return filtered.length > 0 ? filtered : null;
   }
 
   async create(entity: Notebook): Promise<Notebook> {

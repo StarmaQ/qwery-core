@@ -5,5 +5,7 @@ export abstract class NotebookRepositoryPort extends RepositoryPort<
   Notebook,
   string
 > {
-  public abstract findByProjectId(projectId: string): Promise<Notebook | null>;
+  public abstract findByProjectId(
+    projectId: string,
+  ): Promise<Notebook[] | null>;
 }

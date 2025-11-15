@@ -9,12 +9,28 @@ const Divider = z.object({
   divider: z.literal(true),
 });
 
+const RouteChildElement = z.object({
+  label: z.string(),
+  path: z.string(),
+  Icon: z.custom<React.ReactNode>().optional(),
+  end: RouteMatchingEnd,
+  renderAction: z.custom<React.ReactNode>().optional(),
+});
+
 const RouteSubChild = z.object({
   label: z.string(),
   path: z.string(),
   Icon: z.custom<React.ReactNode>().optional(),
   end: RouteMatchingEnd,
   renderAction: z.custom<React.ReactNode>().optional(),
+});
+
+const RouteGroupChild = z.object({
+  label: z.string(),
+  Icon: z.custom<React.ReactNode>().optional(),
+  end: RouteMatchingEnd,
+  renderAction: z.custom<React.ReactNode>().optional(),
+  children: z.array(RouteChildElement).default([]).optional(),
 });
 
 const RouteChild = z.object({
@@ -32,7 +48,7 @@ const RouteGroup = z.object({
   label: z.string(),
   collapsible: z.boolean().optional(),
   collapsed: z.boolean().optional(),
-  children: z.array(RouteChild),
+  children: z.array(z.union([RouteChild, RouteGroupChild])),
   renderAction: z.custom<React.ReactNode>().optional(),
 });
 

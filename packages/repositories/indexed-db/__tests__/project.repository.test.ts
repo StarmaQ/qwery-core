@@ -36,7 +36,6 @@ describe('ProjectRepository', () => {
       name: 'Test Project',
       slug: repository.shortenId(id),
       description: 'Test Description',
-      region: 'us-east-1',
       status: 'active',
       createdAt: new Date('2024-01-01T00:00:00Z'),
       updatedAt: new Date('2024-01-01T00:00:00Z'),
@@ -285,7 +284,6 @@ describe('ProjectRepository', () => {
         org_id: '8d0f678a-8536-51ef-a55c-f18gd2g01bf8',
         name: 'Complex Project',
         description: 'A complex project description',
-        region: 'eu-west-1',
         status: 'pending',
       });
 
@@ -296,7 +294,6 @@ describe('ProjectRepository', () => {
       expect(found.name).toBe(project.name);
       expect(found.slug).toBe(repository.shortenId(project.id));
       expect(found.description).toBe(project.description);
-      expect(found.region).toBe(project.region);
       expect(found.status).toBe(project.status);
       expect(found.createdBy).toBe(project.createdBy);
       expect(found.updatedBy).toBe(project.updatedBy);

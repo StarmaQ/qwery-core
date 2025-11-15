@@ -10,7 +10,7 @@ const ALLOWED_HOSTS =
 
 export default defineConfig(({ command }) => ({
   ssr: {
-    noExternal: command === 'build' ? true : undefined,
+    noExternal: command === 'build' ? true : ['posthog-js', '@posthog/react'],
   },
   plugins: [
     devtoolsJson(),
