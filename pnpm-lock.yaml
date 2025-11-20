@@ -35,6 +35,9 @@ importers:
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
+      playwright:
+        specifier: ^1.56.1
+        version: 1.56.1
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
