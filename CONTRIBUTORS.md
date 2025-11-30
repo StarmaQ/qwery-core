@@ -1,5 +1,7 @@
 
 * [hchalouati](https://github.com/hchalouati)
+* [medazizktata25](https://github.com/medazizktata25)
+* [YassineCommits](https://github.com/YassineCommits)
 
 ```shell
 p=1;
