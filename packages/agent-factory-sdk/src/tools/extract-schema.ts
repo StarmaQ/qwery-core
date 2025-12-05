@@ -136,9 +136,35 @@ export async function extractSchemasParallel(
   viewNames: string[],
   concurrency: number = 4,
 ): Promise<Map<string, SimpleSchema>> {
-  const { processWithConcurrency } = await import(
-    '../services/business-context.service'
-  );
+  // Simple concurrency control implementation
+  const processWithConcurrency = async <T, R>(
+    items: T[],
+    processor: (item: T) => Promise<R>,
+    concurrency: number = 4,
+  ): Promise<R[]> => {
+    const results: R[] = [];
+    let executing: Promise<void>[] = [];
+
+    for (const item of items) {
+      const promise = processor(item)
+        .then((result) => {
+          results.push(result);
+        })
+        .catch((error) => {
+          results.push(error as unknown as R);
+        });
+
+      executing.push(promise);
+
+      if (executing.length >= concurrency) {
+        await Promise.race(executing);
+        executing = executing.filter((p) => p !== undefined);
+      }
+    }
+
+    await Promise.all(executing);
+    return results;
+  };
 
   const schemas = await processWithConcurrency(
     viewNames,

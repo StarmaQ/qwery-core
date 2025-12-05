@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  analyzeSchemaAndUpdateContext,
-  loadBusinessContext,
-} from '../../src/services/business-context.service';
+import { loadBusinessContext } from '../../src/tools/business-context.storage';
+import { buildBusinessContext } from '../../src/tools/build-business-context';
 import type { SimpleSchema } from '@qwery/domain/entities';
 import { join } from 'node:path';
 import { mkdir, rm } from 'node:fs/promises';
@@ -36,16 +34,16 @@ describe('BusinessContextService', () => {
       ],
     };
 
-    const context = await analyzeSchemaAndUpdateContext(
-      testDir,
-      'users',
+    const context = await buildBusinessContext({
+      conversationDir: testDir,
+      viewName: 'users',
       schema,
-    );
+    });
 
     expect(context).toBeDefined();
     expect(context.entities.size).toBeGreaterThan(0);
     expect(context.vocabulary.size).toBeGreaterThan(0);
-    expect(context.domain).toBe('general');
+    expect(context.domain.domain).toBe('general');
     expect(context.views.has('users')).toBe(true);
   });
 
@@ -65,7 +63,11 @@ describe('BusinessContextService', () => {
       ],
     };
 
-    await analyzeSchemaAndUpdateContext(testDir, 'users', schema1);
+    await buildBusinessContext({
+      conversationDir: testDir,
+      viewName: 'users',
+      schema: schema1,
+    });
 
     // Second view with common column
     const schema2: SimpleSchema = {
@@ -83,11 +85,11 @@ describe('BusinessContextService', () => {
       ],
     };
 
-    const context = await analyzeSchemaAndUpdateContext(
-      testDir,
-      'orders',
-      schema2,
-    );
+    const context = await buildBusinessContext({
+      conversationDir: testDir,
+      viewName: 'orders',
+      schema: schema2,
+    });
 
     expect(context.relationships.length).toBeGreaterThan(0);
     expect(context.entityGraph.size).toBeGreaterThan(0);
@@ -108,7 +110,11 @@ describe('BusinessContextService', () => {
       ],
     };
 
-    await analyzeSchemaAndUpdateContext(testDir, 'products', schema);
+    await buildBusinessContext({
+      conversationDir: testDir,
+      viewName: 'products',
+      schema,
+    });
 
     const loaded = await loadBusinessContext(testDir);
 

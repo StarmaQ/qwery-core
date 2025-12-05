@@ -32,13 +32,11 @@ import {
   type RegistryContext,
 } from '../../tools/view-registry';
 import { READ_DATA_AGENT_PROMPT } from '../prompts/read-data-agent.prompt';
-import {
-  analyzeSchemaAndUpdateContext,
-  analyzeSchemasAndUpdateContextParallel,
-  loadBusinessContext,
-  getConfig,
-  LazyBusinessContextLoader,
-} from '../../services/business-context.service';
+import type { BusinessContext } from '../../tools/business-context/business-context.types';
+import { loadBusinessContext, createEmptyContext, mergeBusinessContexts } from '../../tools/business-context/business-context.storage';
+import { getConfig } from '../../tools/business-context/business-context.config';
+import { buildBusinessContext } from '../../tools/business-context/build-business-context';
+import { enhanceBusinessContextInBackground } from './enhance-business-context.actor';
 
 // Lazy workspace resolution - only resolve when actually needed, not at module load time
 // This prevents side effects when the module is imported in browser/SSR contexts
@@ -264,12 +262,19 @@ export const readDataAgent = async (
                       dbPath,
                       viewName: finalViewName,
                     });
-                    await analyzeSchemaAndUpdateContext(
-                      fileDir,
-                      finalViewName,
-                      finalSchema,
+                    // Build fast context (synchronous, < 100ms)
+                    await buildBusinessContext({
+                      conversationDir: fileDir,
+                      viewName: finalViewName,
+                      schema: finalSchema,
+                    });
+                    // Start enhancement in background (don't await)
+                    enhanceBusinessContextInBackground({
+                      conversationDir: fileDir,
+                      viewName: finalViewName,
+                      schema: finalSchema,
                       dbPath,
-                    );
+                    });
 
                     return {
                       viewName: finalViewName,
@@ -472,37 +477,74 @@ export const readDataAgent = async (
             };
           }
 
-          // Update business context - use parallel processing for multiple views
+          // Build fast context (synchronous, < 100ms)
+          let fastContext: BusinessContext;
           if (viewName) {
-            await analyzeSchemaAndUpdateContext(fileDir, viewName, schema, dbPath);
+            // Single view - build fast context
+            fastContext = await buildBusinessContext({
+              conversationDir: fileDir,
+              viewName,
+              schema,
+            });
+
+            // Start enhancement in background (don't await)
+            enhanceBusinessContextInBackground({
+              conversationDir: fileDir,
+              viewName,
+              schema,
+              dbPath,
+            });
           } else {
-            // PARALLEL: Update context for all views at once
-            await analyzeSchemasAndUpdateContextParallel(fileDir, schemasMap, dbPath);
+            // Multiple views - build fast context for each
+            const fastContexts: BusinessContext[] = [];
+            for (const [vName, vSchema] of schemasMap.entries()) {
+              const ctx = await buildBusinessContext({
+                conversationDir: fileDir,
+                viewName: vName,
+                schema: vSchema,
+              });
+              fastContexts.push(ctx);
+
+              // Start enhancement in background for each view
+              enhanceBusinessContextInBackground({
+                conversationDir: fileDir,
+                viewName: vName,
+                schema: vSchema,
+                dbPath,
+              });
+            }
+            // Merge all fast contexts into one
+            fastContext = mergeBusinessContexts(fastContexts);
           }
 
-          // LAZY: Use lazy loader to get only what's needed
-          const loader = new LazyBusinessContextLoader(perfConfig, fileDir, dbPath);
-          const businessContext = await loader.getFullContext();
+          // Use fast context for immediate response
+          const entities = Array.from(fastContext.entities.values()).slice(
+            0,
+            perfConfig.expectedViewCount * 2,
+          );
+          const relationships = fastContext.relationships.slice(0, perfConfig.expectedViewCount * 3);
+          const vocabulary = Object.fromEntries(
+            Array.from(fastContext.vocabulary.entries())
+              .slice(0, perfConfig.expectedViewCount * 10)
+              .map(([key, entry]) => [key, entry]),
+          );
 
-          // Get entities, relationships, and vocabulary (lazy loaded if enabled)
-          const entities = await loader.getEntities(viewName);
-          const relationships = await loader.getRelationships(viewName);
-          const vocabulary = await loader.getVocabulary();
-
+          // Return schema and data insights (hide technical jargon)
           return {
             schema: schema,
-            businessContext: businessContext
-              ? {
-                  domain: businessContext.domain,
-                  entities: entities.slice(0, perfConfig.expectedViewCount * 2), // Limit based on config
-                  relationships: relationships.slice(0, perfConfig.expectedViewCount * 3),
-                  vocabulary: Object.fromEntries(
-                    Array.from(vocabulary.entries())
-                      .slice(0, perfConfig.expectedViewCount * 10) // Limit based on config
-                      .map(([key, entry]) => [key, entry]),
-                  ),
-                }
-              : null,
+            businessContext: {
+              domain: fastContext.domain.domain, // Just the domain name string
+              entities: entities.map((e) => ({
+                name: e.name,
+                columns: e.columns,
+              })), // Simplified - just name and columns
+              relationships: relationships.map((r) => ({
+                from: r.fromView,
+                to: r.toView,
+                join: r.joinCondition,
+              })), // Simplified - just connection info
+              vocabulary: vocabulary, // Keep for internal use but don't expose structure
+            },
           };
         },
       }),
