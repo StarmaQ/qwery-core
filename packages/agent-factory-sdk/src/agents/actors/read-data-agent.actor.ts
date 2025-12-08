@@ -17,9 +17,6 @@ import type { SimpleSchema } from '@qwery/domain/entities';
 import { runQuery } from '../../tools/run-query';
 import { viewSheet } from '../../tools/view-sheet';
 import { READ_DATA_AGENT_PROMPT } from '../prompts/read-data-agent.prompt';
-import type { BusinessContext } from '../../tools/types/business-context.types';
-import { mergeBusinessContexts } from '../../tools/utils/business-context.storage';
-import { getConfig } from '../../tools/utils/business-context.config';
 import { buildBusinessContext } from '../../tools/build-business-context';
 import { enhanceBusinessContextInBackground } from './enhance-business-context.actor';
 import { generateChart, selectChartType } from '../tools/generate-chart';
@@ -33,13 +30,11 @@ import {
   updateViewUsage,
   generateSemanticViewName,
   updateViewName,
-  validateViewExists,
   validateTableExists,
   cleanupOrphanedTempTables,
   deleteViewFromRegistry,
   getViewByName,
   renameView,
-  dropTable,
   type RegistryContext,
 } from '../../tools/view-registry';
 import { loadBusinessContext } from '../../tools/utils/business-context.storage';
@@ -588,7 +583,7 @@ export class ReadDataAgent {
               .optional()
               .describe('Force refresh cache (defaults to false)'),
           }),
-          execute: async ({ forceRefresh }) => {
+          execute: async ({ forceRefresh: _forceRefresh }) => {
             const workspace = getWorkspace();
             if (!workspace) {
               throw new Error('WORKSPACE environment variable is not set');
@@ -1082,6 +1077,7 @@ export class ReadDataAgent {
               ) {
                 const ct = qr.chartType;
                 const supportedTypes = getSupportedChartTypes();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if (supportedTypes.includes(ct as any)) {
                   chartType = ct as typeof chartType;
                 }
@@ -1127,6 +1123,7 @@ export class ReadDataAgent {
 
             // Validate required parameters
             const supportedTypes = getSupportedChartTypes();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (!chartType || !supportedTypes.includes(chartType as any)) {
               throw new Error(
                 `chartType is required and must be one of: ${supportedTypes.join(', ')}. Got: ${chartType}`,

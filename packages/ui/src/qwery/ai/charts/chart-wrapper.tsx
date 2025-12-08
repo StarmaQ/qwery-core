@@ -97,15 +97,17 @@ export function ChartWrapper({
     }
   };
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- ref is stable, ref.current access is intentional
   const downloadAsPNG = useCallback(async () => {
-    if (!ref.current) {
+    const currentRef = ref.current;
+    if (!currentRef) {
       toast.error('Chart element not found');
       return;
     }
 
     try {
       // Find the SVG element within the chart container
-      const svgElement = ref.current.querySelector('svg');
+      const svgElement = currentRef.querySelector('svg');
       if (!svgElement) {
         toast.error('SVG element not found in chart');
         return;
@@ -114,7 +116,6 @@ export function ChartWrapper({
       // Clone the SVG to avoid modifying the original
       const clonedSvg = svgElement.cloneNode(true) as SVGElement;
 
-      // Apply system font to all text elements in the SVG
       const textElements = clonedSvg.querySelectorAll('text, tspan');
       textElements.forEach((textEl) => {
         const element = textEl as SVGTextElement;
@@ -190,7 +191,7 @@ export function ChartWrapper({
       // Draw title if it exists
       if (title) {
         // Get the actual title element to extract its computed color
-        const titleElement = ref.current?.querySelector('h3');
+        const titleElement = currentRef?.querySelector('h3');
         let titleColor = '#000000'; // Default to black
         if (titleElement) {
           const computedStyle = window.getComputedStyle(titleElement);
@@ -258,14 +259,16 @@ export function ChartWrapper({
     }
   }, [ref, title]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- ref is stable, ref.current access is intentional
   const copySVG = useCallback(async () => {
-    if (!ref.current) {
+    const currentRef = ref.current;
+    if (!currentRef) {
       toast.error('Chart element not found');
       return;
     }
 
     try {
-      const svgElement = ref.current.querySelector('svg');
+      const svgElement = currentRef.querySelector('svg');
       if (!svgElement) {
         toast.error('SVG element not found in chart');
         return;

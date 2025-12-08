@@ -50,13 +50,7 @@ import {
   SourcesTrigger,
 } from '../../ai-elements/sources';
 import { useMemo, useState } from 'react';
-import {
-  CopyIcon,
-  RefreshCcwIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  CheckIcon,
-} from 'lucide-react';
+import { CopyIcon, RefreshCcwIcon, XCircleIcon, CheckIcon } from 'lucide-react';
 import { ToolUIPart } from 'ai';
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'error';
@@ -272,40 +266,31 @@ function ChartToolOutput({
     'data' in parsedOutput &&
     'config' in parsedOutput
   ) {
-    try {
-      const chartConfig = parsedOutput as ChartConfig;
+    const chartConfig = parsedOutput as ChartConfig;
 
-      // Validate chart config has required fields
-      if (
-        !chartConfig.chartType ||
-        !Array.isArray(chartConfig.data) ||
-        !chartConfig.config
-      ) {
-        console.warn(
-          '[ChartToolOutput] Invalid chart config structure:',
-          chartConfig,
-        );
-        return <ToolOutput output={output} errorText={errorText} />;
-      }
-
-      return (
-        <div className="min-w-0 space-y-2 p-4">
-          <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Chart
-          </h4>
-          <div className="bg-muted/50 w-full max-w-full min-w-0 overflow-hidden rounded-md p-4">
-            <ChartRenderer chartConfig={chartConfig} />
-          </div>
-        </div>
-      );
-    } catch (error) {
-      console.error(
-        '[ChartToolOutput] Error rendering chart:',
-        error,
-        parsedOutput,
+    // Validate chart config has required fields
+    if (
+      !chartConfig.chartType ||
+      !Array.isArray(chartConfig.data) ||
+      !chartConfig.config
+    ) {
+      console.warn(
+        '[ChartToolOutput] Invalid chart config structure:',
+        chartConfig,
       );
       return <ToolOutput output={output} errorText={errorText} />;
     }
+
+    return (
+      <div className="min-w-0 space-y-2 p-4">
+        <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          Chart
+        </h4>
+        <div className="bg-muted/50 w-full max-w-full min-w-0 overflow-hidden rounded-md p-4">
+          <ChartRenderer chartConfig={chartConfig} />
+        </div>
+      </div>
+    );
   }
 
   return <ToolOutput output={output} errorText={errorText} />;
@@ -344,22 +329,17 @@ function ChartTypeSelectionOutput({
     'chartType' in parsedOutput &&
     'reasoning' in parsedOutput
   ) {
-    try {
-      const selection = parsedOutput as ChartTypeSelection;
-      return (
-        <div className="min-w-0 space-y-2 p-4">
-          <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Chart Type Selection
-          </h4>
-          <div className="bg-muted/50 max-w-full min-w-0 overflow-hidden rounded-md p-4">
-            <ChartTypeSelector selection={selection} />
-          </div>
+    const selection = parsedOutput as ChartTypeSelection;
+    return (
+      <div className="min-w-0 space-y-2 p-4">
+        <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          Chart Type Selection
+        </h4>
+        <div className="bg-muted/50 max-w-full min-w-0 overflow-hidden rounded-md p-4">
+          <ChartTypeSelector selection={selection} />
         </div>
-      );
-    } catch (error) {
-      console.error('[ChartTypeSelectionOutput] Error:', error);
-      return <ToolOutput output={output} errorText={errorText} />;
-    }
+      </div>
+    );
   }
 
   return <ToolOutput output={output} errorText={errorText} />;
@@ -400,22 +380,17 @@ function SchemaOutput({
     typeof parsedOutput.schema === 'object' &&
     'tables' in parsedOutput.schema
   ) {
-    try {
-      const schema = parsedOutput.schema as SchemaData;
-      return (
-        <div className="min-w-0 space-y-2 p-4">
-          <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Schema
-          </h4>
-          <div className="bg-muted/50 max-w-full min-w-0 overflow-hidden rounded-md p-4">
-            <SchemaVisualizer schema={schema} />
-          </div>
+    const schema = parsedOutput.schema as SchemaData;
+    return (
+      <div className="min-w-0 space-y-2 p-4">
+        <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          Schema
+        </h4>
+        <div className="bg-muted/50 max-w-full min-w-0 overflow-hidden rounded-md p-4">
+          <SchemaVisualizer schema={schema} />
         </div>
-      );
-    } catch (error) {
-      console.error('[SchemaOutput] Error:', error);
-      return <ToolOutput output={output} errorText={errorText} />;
-    }
+      </div>
+    );
   }
 
   return <ToolOutput output={output} errorText={errorText} />;
@@ -485,17 +460,12 @@ function SQLQueryOutput({
     'columns' in parsedOutput.result &&
     'rows' in parsedOutput.result
   ) {
-    try {
-      const result = parsedOutput as SQLQueryResult;
-      return (
-        <div className="min-w-0 space-y-2 p-4">
-          <SQLQueryVisualizer query={query} result={result} />
-        </div>
-      );
-    } catch (error) {
-      console.error('[SQLQueryOutput] Error:', error);
-      return <ToolOutput output={output} errorText={errorText} />;
-    }
+    const result = parsedOutput as SQLQueryResult;
+    return (
+      <div className="min-w-0 space-y-2 p-4">
+        <SQLQueryVisualizer query={query} result={result} />
+      </div>
+    );
   }
 
   return <ToolOutput output={output} errorText={errorText} />;
@@ -638,22 +608,17 @@ function ViewSheetOutput({
     'columns' in parsedOutput &&
     'rows' in parsedOutput
   ) {
-    try {
-      const data = parsedOutput as ViewSheetData;
-      return (
-        <div className="min-w-0 space-y-2 p-4">
-          <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Sheet View
-          </h4>
-          <div className="bg-muted/50 max-w-full min-w-0 overflow-hidden rounded-md p-4">
-            <ViewSheetVisualizer data={data} />
-          </div>
+    const data = parsedOutput as ViewSheetData;
+    return (
+      <div className="min-w-0 space-y-2 p-4">
+        <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          Sheet View
+        </h4>
+        <div className="bg-muted/50 max-w-full min-w-0 overflow-hidden rounded-md p-4">
+          <ViewSheetVisualizer data={data} />
         </div>
-      );
-    } catch (error) {
-      console.error('[ViewSheetOutput] Error:', error);
-      return <ToolOutput output={output} errorText={errorText} />;
-    }
+      </div>
+    );
   }
 
   return <ToolOutput output={output} errorText={errorText} />;

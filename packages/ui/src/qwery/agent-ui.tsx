@@ -20,13 +20,7 @@ import {
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { useAgentStatus } from './agent-status-context';
-import {
-  CopyIcon,
-  RefreshCcwIcon,
-  PencilIcon,
-  CheckIcon,
-  XIcon,
-} from 'lucide-react';
+import { CopyIcon, RefreshCcwIcon, CheckIcon, XIcon } from 'lucide-react';
 import { Button } from '../shadcn/button';
 import { Textarea } from '../shadcn/textarea';
 import {
@@ -59,10 +53,7 @@ import {
   type SQLQueryResult,
 } from './ai/sql-query-visualizer';
 import { SchemaVisualizer, type SchemaData } from './ai/schema-visualizer';
-import {
-  AvailableSheetsVisualizer,
-  type AvailableSheetsData,
-} from './ai/sheets/available-sheets-visualizer';
+import { AvailableSheetsVisualizer } from './ai/sheets/available-sheets-visualizer';
 import {
   ViewSheetVisualizer,
   type ViewSheetData,
@@ -99,7 +90,7 @@ export default function QweryAgentUI(props: QweryAgentUIProps) {
     models,
     onOpen,
     usage,
-    emitFinish,
+    emitFinish: _emitFinish,
     datasources,
     selectedDatasources,
     onDatasourceSelectionChange,
@@ -173,7 +164,7 @@ export default function QweryAgentUI(props: QweryAgentUIProps) {
   );
 
   // Handle edit message
-  const handleEditStart = useCallback((messageId: string, text: string) => {
+  const _handleEditStart = useCallback((messageId: string, text: string) => {
     setEditingMessageId(messageId);
     setEditText(text);
   }, []);
@@ -976,8 +967,8 @@ function PromptInputInner({
   textareaRef,
   status,
   stop,
-  setMessages,
-  messages,
+  setMessages: _setMessages,
+  messages: _messages,
   models,
   usage,
   datasources,

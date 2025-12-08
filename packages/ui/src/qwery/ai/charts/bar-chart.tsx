@@ -37,14 +37,6 @@ export function BarChart({ chartConfig }: BarChartProps) {
   const { xKey = 'name', yKey = 'value', colors, labels } = config;
   const { showAxisLabels } = useContext(ChartContext);
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="text-muted-foreground p-4 text-center text-sm">
-        No data available for chart
-      </div>
-    );
-  }
-
   // Validate and fix data keys if needed
   const { actualXKey, actualYKey } = useMemo(() => {
     if (!data || data.length === 0) {
@@ -102,6 +94,14 @@ export function BarChart({ chartConfig }: BarChartProps) {
     }
     return configObj;
   }, [actualYKey, yKey, chartColors, labels]);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-muted-foreground p-4 text-center text-sm">
+        No data available for chart
+      </div>
+    );
+  }
 
   // Get axis labels
   const xAxisLabel =

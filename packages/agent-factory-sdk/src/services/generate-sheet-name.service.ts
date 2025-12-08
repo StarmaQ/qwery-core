@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 import { resolveModel } from './model-resolver';
-import type { SimpleSchema } from '../tools/extract-schema';
+import type { SimpleSchema } from '@qwery/domain/entities';
 
 const GENERATE_SHEET_NAME_PROMPT = (
   currentName: string,
@@ -8,7 +8,10 @@ const GENERATE_SHEET_NAME_PROMPT = (
 ) => {
   const table = schema.tables[0];
   const columns = table?.columns
-    .map((col) => `${col.columnName} (${col.columnType})`)
+    .map(
+      (col: { columnName: string; columnType: string }) =>
+        `${col.columnName} (${col.columnType})`,
+    )
     .join(', ');
 
   return `Based on the following Google Sheet schema, generate a better, more descriptive name for this sheet. The current name is "${currentName}".

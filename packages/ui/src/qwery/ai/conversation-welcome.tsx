@@ -35,7 +35,7 @@ export function ConversationWelcome({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
       e.preventDefault();
-      handleSubmit({ text: input.trim() });
+      handleSubmit({ text: input.trim(), files: [] });
     }
   };
 
@@ -54,7 +54,7 @@ export function ConversationWelcome({
               Start a new conversation
             </h1>
             <p className="text-muted-foreground text-lg">
-              Ask anything or describe what you'd like to explore
+              Ask anything or describe what you&apos;d like to explore
             </p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export function ConversationWelcome({
               size="lg"
               variant="outline"
               onClick={() => {
-                handleSubmit({ text: 'New Conversation' });
+                handleSubmit({ text: 'New Conversation', files: [] });
               }}
               className="gap-2"
             >

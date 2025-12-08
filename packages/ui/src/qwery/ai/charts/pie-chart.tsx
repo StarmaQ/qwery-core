@@ -29,14 +29,6 @@ export function PieChart({ chartConfig }: PieChartProps) {
   const { data, config } = chartConfig;
   const { nameKey = 'name', valueKey = 'value', colors } = config;
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="text-muted-foreground p-4 text-center text-sm">
-        No data available for chart
-      </div>
-    );
-  }
-
   // Get colors (chart generation now uses direct hex colors)
   const chartColors = useMemo(() => getColors(colors), [colors]);
 
@@ -53,6 +45,14 @@ export function PieChart({ chartConfig }: PieChartProps) {
     }
     return configObj;
   }, [valueKey, chartColors, config.labels]);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-muted-foreground p-4 text-center text-sm">
+        No data available for chart
+      </div>
+    );
+  }
 
   // Recharts color usage:
   // - Pie chart uses Cell components with `fill` prop for each slice

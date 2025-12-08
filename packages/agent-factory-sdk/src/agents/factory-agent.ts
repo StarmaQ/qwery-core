@@ -3,7 +3,6 @@ import { createActor } from 'xstate';
 import { nanoid } from 'nanoid';
 import { createStateMachine } from './state-machine';
 import { Repositories } from '@qwery/domain/repositories';
-import { DomainException } from '@qwery/domain/exceptions';
 import { ActorRegistry } from './utils/actor-registry';
 import { persistState } from './utils/state-persistence';
 import {

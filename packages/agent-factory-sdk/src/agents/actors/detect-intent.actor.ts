@@ -76,7 +76,7 @@ export const detectIntentActor = fromPromise(
     };
   }): Promise<z.infer<typeof IntentSchema>> => {
     try {
-      const intent = await detectIntent(input.inputMessage, input.model);
+      const intent = await detectIntent(input.inputMessage);
       return intent;
     } catch (error) {
       console.error('[detectIntentActor] ERROR:', error);

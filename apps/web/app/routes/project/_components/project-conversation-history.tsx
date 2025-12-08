@@ -4,7 +4,7 @@ import { useWorkspace } from '~/lib/context/workspace-context';
 import { useGetConversationsByProject } from '~/lib/queries/use-get-conversations-by-project';
 import { Conversation } from '@qwery/domain/entities';
 import pathsConfig from '~/config/paths.config';
-import { useNavigate, useParams, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { createPath } from '~/config/paths.config';
 import { useConversation } from '~/lib/mutations/use-conversation';
 import { toast } from 'sonner';

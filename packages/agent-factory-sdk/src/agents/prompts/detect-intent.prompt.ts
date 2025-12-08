@@ -62,7 +62,7 @@ Examples:
 
 Respond ONLY with a strict JSON object using this schema:
 {
-  "intent": "one of the supported intent names or \"other\"",
+  "intent": "one of the supported intent names or other",
   "complexity": "simple" | "medium" | "complex",
   "needsChart": boolean
 }

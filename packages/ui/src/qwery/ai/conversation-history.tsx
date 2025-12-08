@@ -213,14 +213,6 @@ export function ConversationHistory({
     });
   };
 
-  const handleSelectAll = () => {
-    if (selectedIds.size === conversations.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(conversations.map((c) => c.id)));
-    }
-  };
-
   const handleDeleteSelected = () => {
     if (selectedIds.size === 0) return;
     setShowDeleteDialog(true);

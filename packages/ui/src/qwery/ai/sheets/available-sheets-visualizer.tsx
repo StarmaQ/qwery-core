@@ -11,6 +11,7 @@ import {
   PencilIcon,
 } from 'lucide-react';
 import { Button } from '../../../shadcn/button';
+import { Badge } from '../../../shadcn/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +51,7 @@ export function AvailableSheetsVisualizer({
   onRenameSheet,
   isRequestInProgress = false,
 }: AvailableSheetsVisualizerProps) {
-  const { sheets, message } = data;
+  const { sheets } = data;
   const [clickedSheet, setClickedSheet] = useState<string | null>(null);
   const [selectedSheets, setSelectedSheets] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -68,10 +69,20 @@ export function AvailableSheetsVisualizer({
     onViewSheet?.(sheetName);
   };
 
+  // Reset clickedSheet when request completes
+  const prevRequestInProgressRef = useRef(isRequestInProgress);
   useEffect(() => {
-    if (!isRequestInProgress && clickedSheet) {
-      setClickedSheet(null);
+    if (
+      prevRequestInProgressRef.current &&
+      !isRequestInProgress &&
+      clickedSheet
+    ) {
+      // Use queueMicrotask to avoid setState in effect
+      queueMicrotask(() => {
+        setClickedSheet(null);
+      });
     }
+    prevRequestInProgressRef.current = isRequestInProgress;
   }, [isRequestInProgress, clickedSheet]);
 
   const handleToggleSelection = (sheetName: string) => {

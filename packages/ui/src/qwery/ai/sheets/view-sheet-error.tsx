@@ -55,6 +55,7 @@ export function ViewSheetError({
   onRetry,
   availableSheets = [],
 }: ViewSheetErrorProps) {
+  const [showDetails, setShowDetails] = useState(false);
   const { isTableNotFound, suggestedSheetName, originalSheetName } =
     parseSheetError(errorText);
 
@@ -127,8 +128,6 @@ export function ViewSheetError({
   }
 
   // For other error types, show simplified error with collapsible details
-  const [showDetails, setShowDetails] = useState(false);
-
   return (
     <div className="min-w-0 space-y-3 p-4">
       <div className="flex items-center gap-3">

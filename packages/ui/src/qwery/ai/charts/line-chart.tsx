@@ -37,14 +37,6 @@ export function LineChart({ chartConfig }: LineChartProps) {
   const { xKey = 'name', yKey = 'value', colors, labels } = config;
   const { showAxisLabels } = useContext(ChartContext);
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="text-muted-foreground p-4 text-center text-sm">
-        No data available for chart
-      </div>
-    );
-  }
-
   // Line charts use colors directly from config without default fallback
   const chartColors = useMemo(() => getColorsForBarLine(colors), [colors]);
 
@@ -58,6 +50,14 @@ export function LineChart({ chartConfig }: LineChartProps) {
     }
     return configObj;
   }, [yKey, chartColors, labels]);
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-muted-foreground p-4 text-center text-sm">
+        No data available for chart
+      </div>
+    );
+  }
 
   // Get axis labels
   const xAxisLabel = labels?.[xKey] || labels?.name || xKey;

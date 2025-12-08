@@ -4,7 +4,6 @@ import {
   getChartDefinition,
   getAxesLabelsPrecisionGuidelines,
 } from '../config/supported-charts';
-import { getChartColors } from '../config/chart-colors';
 import type { BusinessContext } from '../../tools/types/business-context.types';
 
 export const GENERATE_CHART_CONFIG_PROMPT = (
@@ -70,7 +69,7 @@ ${getChartGenerationPrompt(chartType)}
   * Vocabulary mappings (technical column → business term):
     ${Array.from(businessContext.vocabulary.entries())
       .map(
-        ([term, entry]) =>
+        ([_term, entry]) =>
           `  - "${entry.businessTerm}" → [${entry.technicalTerms.join(', ')}]${entry.synonyms.length > 0 ? ` (synonyms: ${entry.synonyms.join(', ')})` : ''}`,
       )
       .join('\n    ')}

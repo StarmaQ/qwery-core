@@ -74,12 +74,15 @@ export function ChartColorEditor({
     // Only update if the display colors actually changed
     if (prevColorsStrRef.current !== displayColorsStr) {
       prevColorsStrRef.current = displayColorsStr;
-      setLocalColors((prev: string[]) => {
-        const prevStr = JSON.stringify(prev);
-        if (prevStr === displayColorsStr) {
-          return prev; // No change needed
-        }
-        return displayColors;
+      // Use queueMicrotask to avoid setState in effect
+      queueMicrotask(() => {
+        setLocalColors((prev: string[]) => {
+          const prevStr = JSON.stringify(prev);
+          if (prevStr === displayColorsStr) {
+            return prev; // No change needed
+          }
+          return displayColors;
+        });
       });
     }
   }, [colors, computeDisplayColors]);

@@ -10,6 +10,7 @@ import {
 import {
   ConversationRepository,
   MessageRepository,
+  UsageRepository,
 } from '@qwery/repository-in-memory';
 import { nanoid } from 'nanoid';
 import { v4 as uuidv4 } from 'uuid';
@@ -67,6 +68,7 @@ export class NotebookRunner {
         // Create in-memory repositories for the agent
         const conversationRepository = new ConversationRepository();
         const messageRepository = new MessageRepository();
+        const usageRepository = new UsageRepository();
         const repositories = {
           user: null as unknown,
           organization: null as unknown,
@@ -75,6 +77,7 @@ export class NotebookRunner {
           notebook: null as unknown,
           conversation: conversationRepository,
           message: messageRepository,
+          usage: usageRepository,
         };
 
         // Create the conversation before creating the FactoryAgent
@@ -157,14 +160,17 @@ export class NotebookRunner {
         const sql = sqlMatch[0].trim();
         const driver = await createDriverForDatasource(options.datasource);
         try {
-          const result = await driver.query(sql);
+          const result = await driver.query(
+            sql,
+            options.datasource.config ?? {},
+          );
           const rowCount =
-            result.stat.rowsRead ??
-            result.stat.rowsAffected ??
+            result.stat?.rowsRead ??
+            result.stat?.rowsAffected ??
             result.rows.length;
           return { sql, rows: result.rows, rowCount };
         } finally {
-          driver.close();
+          await driver.close?.();
         }
       }
 

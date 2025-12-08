@@ -47,11 +47,10 @@ export default function ConversationIndexPage() {
   const projectSlug = useParams().slug;
 
   const project = useGetProjectBySlug(repositories.project, projectSlug || '');
-  const { data: allConversations = [], isLoading } =
-    useGetConversationsByProject(
-      repositories.conversation,
-      workspace.projectId,
-    );
+  const { data: allConversations = [] } = useGetConversationsByProject(
+    repositories.conversation,
+    workspace.projectId,
+  );
 
   const recentConversations = allConversations
     .sort((a, b) => {
@@ -121,7 +120,7 @@ export default function ConversationIndexPage() {
               Start a new conversation
             </h1>
             <p className="text-muted-foreground text-lg">
-              Ask anything or describe what you'd like to explore
+              Ask anything or describe what you&apos;d like to explore
             </p>
           </div>
         </div>

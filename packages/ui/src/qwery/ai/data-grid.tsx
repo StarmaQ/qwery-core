@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../../shadcn/button';
 import { cn } from '../../lib/utils';
@@ -129,14 +130,27 @@ export function DataGrid({
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(rows.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
+
+  // Reset to page 1 when data changes - use derived state instead of effect
+  const page = currentPage > totalPages && totalPages > 0 ? 1 : currentPage;
+
+  const startIndex = (page - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const currentRows = rows.slice(startIndex, endIndex);
 
+  // Update page state when rows change (but not during render)
+  const prevRowsLengthRef = useRef(rows.length);
   useEffect(() => {
-    // Reset to page 1 when data changes
-    setCurrentPage(1);
-  }, [rows.length]);
+    if (prevRowsLengthRef.current !== rows.length) {
+      prevRowsLengthRef.current = rows.length;
+      if (currentPage > totalPages && totalPages > 0) {
+        // Use queueMicrotask to avoid setState in effect
+        queueMicrotask(() => {
+          setCurrentPage(1);
+        });
+      }
+    }
+  }, [rows.length, currentPage, totalPages]);
 
   if (rows.length === 0) {
     return (
@@ -225,20 +239,20 @@ export function DataGrid({
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              disabled={page === 1}
               className="h-7 gap-1"
             >
               <ChevronLeft className="h-3 w-3" />
               <span className="text-xs">Previous</span>
             </Button>
             <div className="text-muted-foreground min-w-[80px] text-center text-xs">
-              Page {currentPage} of {totalPages}
+              Page {page} of {totalPages}
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              disabled={page === totalPages}
               className="h-7 gap-1"
             >
               <span className="text-xs">Next</span>

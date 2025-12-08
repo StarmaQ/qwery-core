@@ -109,7 +109,10 @@ export function ChartRenderer({ chartConfig }: ChartRendererProps) {
   useEffect(() => {
     const persisted = loadPersistedColors();
     if (persisted && persisted.length === requiredColorCount) {
-      setCustomColors(persisted);
+      // Use queueMicrotask to avoid setState in effect
+      queueMicrotask(() => {
+        setCustomColors(persisted);
+      });
       return;
     }
 
@@ -128,13 +131,16 @@ export function ChartRenderer({ chartConfig }: ChartRendererProps) {
         ...trimmedColors,
         ...defaultColors.slice(trimmedColors.length, requiredColorCount),
       ];
-      setCustomColors(paddedColors);
+      queueMicrotask(() => {
+        setCustomColors(paddedColors);
+      });
     } else {
-      setCustomColors(trimmedColors);
+      queueMicrotask(() => {
+        setCustomColors(trimmedColors);
+      });
     }
   }, [chartConfig.config.colors, requiredColorCount, loadPersistedColors]);
 
-  // Ensure customColors matches required count
   const trimmedCustomColors = useMemo(() => {
     return customColors.slice(0, requiredColorCount);
   }, [customColors, requiredColorCount]);
