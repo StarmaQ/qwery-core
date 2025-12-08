@@ -1,0 +1,98 @@
+{
+  "name": "@qwery/extension-postgresql",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/extension.js",
+  "scripts": {
+    "lint": "echo \"no lint configured\"",
+    "test": "vitest run --coverage --passWithNoTests",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "contributes": {
+    "datasources": [
+      {
+        "id": "postgresql",
+        "name": "PostgreSQL",
+        "description": "Connect to PostgreSQL databases",
+        "icon": "media/postgresql.svg",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "connectionUrl": {
+              "type": "string",
+              "description": "PostgreSQL connection string (postgresql://user:pass@host:port/db)"
+            }
+          },
+          "required": [
+            "connectionUrl"
+          ]
+        },
+        "drivers": [
+          "postgresql.default"
+        ]
+      },
+      {
+        "id": "postgresql-supabase",
+        "name": "Supabase",
+        "description": "Connect to Supabase databases",
+        "icon": "media/supabase-logo-wordmark--dark.svg",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "connectionUrl": {
+              "type": "string",
+              "description": "Supabase connection string (postgresql://user:pass@host:port/db)"
+            }
+          },
+          "required": [
+            "connectionUrl"
+          ]
+        },
+        "drivers": [
+          "postgresql.default"
+        ]
+      },
+      {
+        "id": "postgresql-neon",
+        "name": "Neon",
+        "description": "Connect to Neon databases",
+        "icon": "media/neon-logo-dark-color.svg",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "connectionUrl": {
+              "type": "string",
+              "description": "Neon connection string (postgresql://user:pass@host:port/db)"
+            }
+          },
+          "required": [
+            "connectionUrl"
+          ]
+        },
+        "drivers": [
+          "postgresql.default"
+        ]
+      }
+    ],
+    "drivers": [
+      {
+        "id": "postgresql.default",
+        "name": "PostgreSQL (Node)",
+        "description": "Default Node runtime PostgreSQL driver",
+        "runtime": "node",
+        "entry": "./dist/driver.js"
+      }
+    ]
+  },
+  "dependencies": {
+    "@qwery/extensions-sdk": "workspace:*",
+    "pg": "^8.13.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "@vitest/coverage-istanbul": "catalog:",
+    "vitest": "catalog:"
+  }
+}

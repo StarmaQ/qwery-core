@@ -54,6 +54,7 @@
     "desktop:build": "pnpm --filter desktop build",
     "desktop:package": "pnpm --filter desktop package",
     "desktop:start": "pnpm --filter desktop start",
+    "extensions:build": "node tooling/extensions/build.js",
     "update": "pnpm update -r",
     "syncpack:list": "pnpm dlx syncpack list-mismatches",
     "syncpack:fix": "pnpm dlx syncpack fix-mismatches",
@@ -90,10 +91,11 @@
     "@turbo/gen": "^2.6.0",
     "@types/node": "catalog:",
     "cross-env": "^10.1.0",
+    "esbuild": "^0.27.1",
     "playwright": "^1.56.1",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "turbo": "^2.6.0",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:"
   }
 }
