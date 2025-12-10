@@ -44,4 +44,3 @@ export class ActorRegistry {
     return new Map(this.actors);
   }
 }
-

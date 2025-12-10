@@ -43,4 +43,3 @@ export async function generateConversationTitle(
     return 'New Conversation';
   }
 }
-

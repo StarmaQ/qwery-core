@@ -651,9 +651,9 @@ export function ToolPart({ part, messageId, index }: ToolPartProps) {
     // Handle runQuery tool with SQLQueryVisualizer
     if (part.type === 'tool-runQuery' && part.output) {
       const input = part.input as { query?: string } | null;
-      const output = part.output as
-        | { result?: { columns: string[]; rows: Array<Record<string, unknown>> } }
-        | null;
+      const output = part.output as {
+        result?: { columns: string[]; rows: Array<Record<string, unknown>> };
+      } | null;
       return (
         <SQLQueryVisualizer
           query={input?.query}
@@ -690,15 +690,13 @@ export function ToolPart({ part, messageId, index }: ToolPartProps) {
 
     // Handle listAvailableSheets tool with AvailableSheetsVisualizer
     if (part.type === 'tool-listAvailableSheets' && part.output) {
-      const output = part.output as
-        | {
-            sheets?: Array<{
-              name: string;
-              type: 'view' | 'table' | 'attached_table';
-            }>;
-            count?: number;
-          }
-        | null;
+      const output = part.output as {
+        sheets?: Array<{
+          name: string;
+          type: 'view' | 'table' | 'attached_table';
+        }>;
+        count?: number;
+      } | null;
       if (output?.sheets) {
         // Map tool output to visualizer format
         const mappedSheets = output.sheets.map((sheet) => ({
@@ -718,16 +716,14 @@ export function ToolPart({ part, messageId, index }: ToolPartProps) {
 
     // Handle viewSheet tool with ViewSheetVisualizer
     if (part.type === 'tool-viewSheet' && part.output) {
-      const output = part.output as
-        | {
-            sheetName?: string;
-            columns?: string[];
-            rows?: Array<Record<string, unknown>>;
-            rowCount?: number;
-            limit?: number;
-            hasMore?: boolean;
-          }
-        | null;
+      const output = part.output as {
+        sheetName?: string;
+        columns?: string[];
+        rows?: Array<Record<string, unknown>>;
+        rowCount?: number;
+        limit?: number;
+        hasMore?: boolean;
+      } | null;
       if (output?.sheetName && output?.columns && output?.rows !== undefined) {
         const displayedRows = output.rows.length;
         const totalRows = output.rowCount ?? displayedRows;
@@ -749,9 +745,18 @@ export function ToolPart({ part, messageId, index }: ToolPartProps) {
     }
 
     // Handle viewSheet errors with ViewSheetError
-    if (part.type === 'tool-viewSheet' && part.state === 'output-error' && part.errorText) {
+    if (
+      part.type === 'tool-viewSheet' &&
+      part.state === 'output-error' &&
+      part.errorText
+    ) {
       const input = part.input as { sheetName?: string } | null;
-      return <ViewSheetError errorText={part.errorText} sheetName={input?.sheetName} />;
+      return (
+        <ViewSheetError
+          errorText={part.errorText}
+          sheetName={input?.sheetName}
+        />
+      );
     }
 
     // Handle generateChart tool with ChartRenderer

@@ -1,4 +1,3 @@
-import { DuckDBInstanceManager } from './duckdb-instance-manager';
 import { dropTable } from './view-registry';
 
 export interface DeleteSheetOptions {
@@ -34,8 +33,7 @@ export const deleteSheet = async (
       await dropTable(dbPath, sheetName);
       deletedSheets.push(sheetName);
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : String(error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
       failedSheets.push({ sheetName, error: errorMsg });
     }
   }
@@ -58,5 +56,3 @@ export const deleteSheet = async (
     message,
   };
 };
-
-

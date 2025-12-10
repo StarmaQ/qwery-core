@@ -16,10 +16,7 @@ import { listAvailableSheets } from '../../tools/list-available-sheets';
 import { viewSheet } from '../../tools/view-sheet';
 import { renameSheet } from '../../tools/rename-sheet';
 import { deleteSheet } from '../../tools/delete-sheet';
-import {
-  selectChartType,
-  generateChart,
-} from '../tools/generate-chart';
+import { selectChartType, generateChart } from '../tools/generate-chart';
 import { loadBusinessContext } from '../../tools/utils/business-context.storage';
 import { READ_DATA_AGENT_PROMPT } from '../prompts/read-data-agent.prompt';
 import type { BusinessContext } from '../../tools/types/business-context.types';
@@ -237,7 +234,6 @@ export const readDataAgent = async (
           const collectedSchemas: Map<string, SimpleSchema> = new Map();
 
           try {
-
             const dbReader = await conn.runAndReadAll(
               'SELECT name FROM pragma_database_list;',
             );
@@ -261,11 +257,11 @@ export const readDataAgent = async (
 
             for (const db of databases) {
               const escapedDb = db.replace(/"/g, '""');
-              
+
               // For attached foreign databases, query their information_schema directly
               // For main database, query the default information_schema
               const isAttachedDb = db.startsWith('ds_');
-              
+
               let tableRows: Array<{
                 table_schema: string;
                 table_name: string;
@@ -276,7 +272,7 @@ export const readDataAgent = async (
                 table_name: string;
                 table_type: string;
               }> = [];
-              
+
               if (isAttachedDb) {
                 // For attached databases, query their information_schema directly
                 try {
@@ -325,16 +321,16 @@ export const readDataAgent = async (
                   continue;
                 }
               }
-              
+
               // Combine tables and views
               const allRows = [...tableRows, ...viewRows];
-              
+
               let skippedSystemSchemas = 0;
               let skippedSystemTables = 0;
 
               for (const row of allRows) {
                 const schemaName = (row.table_schema || 'main').toLowerCase();
-                
+
                 // Skip system schemas (NO LOGGING - just count)
                 if (systemSchemas.has(schemaName)) {
                   skippedSystemSchemas++;
@@ -386,7 +382,7 @@ export const readDataAgent = async (
                 '../../tools/utils/business-context.utils'
               );
               const fullName = `${db}.${schemaName}.${tableName}`;
-              
+
               if (isSystemOrTempTable(fullName)) {
                 throw new Error(
                   `Cannot access system table: ${viewId}. Please query user tables only.`,

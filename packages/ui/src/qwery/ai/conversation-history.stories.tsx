@@ -175,9 +175,13 @@ export const NoCurrentConversation: Story = {
             console.log('Selected conversation:', id)
           }
           onNewConversation={() => console.log('New conversation clicked')}
-          onConversationEdit={(id, newTitle) => console.log('Edit conversation:', id, newTitle)}
+          onConversationEdit={(id, newTitle) =>
+            console.log('Edit conversation:', id, newTitle)
+          }
           onConversationDelete={(id) => console.log('Delete conversation:', id)}
-          onConversationsDelete={(ids) => console.log('Delete conversations:', ids)}
+          onConversationsDelete={(ids) =>
+            console.log('Delete conversations:', ids)
+          }
         />
       </div>
     );

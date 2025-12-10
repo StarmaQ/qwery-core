@@ -53,20 +53,9 @@ const DEFAULT_SYSTEM_SCHEMAS: Record<string, string[]> = {
     'extensions',
     'pgbouncer',
   ],
-  mysql: [
-    'information_schema',
-    'mysql',
-    'performance_schema',
-    'sys',
-  ],
-  clickhouse: [
-    'system',
-    'information_schema',
-    'INFORMATION_SCHEMA',
-  ],
-  sqlite: [
-    'sqlite_master',
-  ],
+  mysql: ['information_schema', 'mysql', 'performance_schema', 'sys'],
+  clickhouse: ['system', 'information_schema', 'INFORMATION_SCHEMA'],
+  sqlite: ['sqlite_master'],
 };
 
 /**
@@ -91,7 +80,7 @@ export async function getSystemSchemas(
       // For now, we use the defaults but this can be extended
       // by adding a systemSchemas property to extension metadata
     }
-  } catch (error) {
+  } catch {
     // Extension not available, use defaults
     console.debug(
       `[SystemSchemaFilter] Extension not available for ${provider}, using defaults`,
@@ -143,6 +132,3 @@ export function isSystemTableName(tableName: string): boolean {
     name.includes('_secrets')
   );
 }
-
-
-

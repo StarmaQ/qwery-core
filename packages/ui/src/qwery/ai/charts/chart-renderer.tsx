@@ -1,15 +1,32 @@
 'use client';
 
-import { useRef, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import {
+  useRef,
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+} from 'react';
 import * as React from 'react';
 
 // Dynamic imports to prevent infinite renders
-const BarChart = lazy(() => import('./bar-chart').then((m) => ({ default: m.BarChart })));
-const LineChart = lazy(() => import('./line-chart').then((m) => ({ default: m.LineChart })));
-const PieChart = lazy(() => import('./pie-chart').then((m) => ({ default: m.PieChart })));
-const ChartWrapper = lazy(() => import('./chart-wrapper').then((m) => ({ default: m.ChartWrapper })));
-const ChartColorEditor = lazy(() => import('./chart-color-editor').then((m) => ({ default: m.ChartColorEditor })));
-const ChartTypeSelector = lazy(() => import('./chart-type-selector').then((m) => ({ default: m.ChartTypeSelector })));
+const BarChart = lazy(() =>
+  import('./bar-chart').then((m) => ({ default: m.BarChart })),
+);
+const LineChart = lazy(() =>
+  import('./line-chart').then((m) => ({ default: m.LineChart })),
+);
+const PieChart = lazy(() =>
+  import('./pie-chart').then((m) => ({ default: m.PieChart })),
+);
+const ChartWrapper = lazy(() =>
+  import('./chart-wrapper').then((m) => ({ default: m.ChartWrapper })),
+);
+const ChartColorEditor = lazy(() =>
+  import('./chart-color-editor').then((m) => ({ default: m.ChartColorEditor })),
+);
 
 // Import type only (no runtime import)
 import type { ChartType } from './chart-type-selector';

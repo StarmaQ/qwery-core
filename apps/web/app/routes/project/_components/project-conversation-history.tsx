@@ -160,7 +160,10 @@ export function ProjectConversationHistory() {
           `Deleted ${conversationIds.length} conversation${conversationIds.length !== 1 ? 's' : ''}`,
         );
         // Navigate away if we deleted the current conversation
-        if (currentConversationId && conversationIds.includes(currentConversationId)) {
+        if (
+          currentConversationId &&
+          conversationIds.includes(currentConversationId)
+        ) {
           navigate(createPath(pathsConfig.app.project, projectSlug || ''));
         }
       })

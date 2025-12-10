@@ -38,7 +38,7 @@ export const runQuery = async (
   opts: RunQueryOptions,
 ): Promise<RunQueryResult> => {
   const { DuckDBInstanceManager } = await import('./duckdb-instance-manager');
-  const { conversationId, workspace, query, checkedDatasourceIds } = opts;
+  const { conversationId, workspace, query } = opts;
 
   // Get connection from manager
   const conn = await DuckDBInstanceManager.getConnection(

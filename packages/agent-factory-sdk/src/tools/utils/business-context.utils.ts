@@ -134,20 +134,24 @@ export function calculateEntityConfidence(
  * Check if table name is a system or temp table
  * Uses extension abstraction for system schema detection
  * Synchronous version for backward compatibility
- * 
+ *
  * Note: This uses inline system schema checks to avoid async imports
  * in a synchronous function. The actual filtering in read-data-agent
  * uses the async version from system-schema-filter.ts
  */
 export function isSystemOrTempTable(tableName: string): boolean {
   const name = tableName.toLowerCase();
-  
+
   // Handle fully qualified names (db.schema.table)
   const parts = name.split('.');
   if (parts.length >= 2) {
     const schema = parts[parts.length - 2];
     const table = parts[parts.length - 1];
-    
+
+    if (!schema || !table) {
+      return false;
+    }
+
     // Common system schemas across all providers
     // This matches what's in system-schema-filter.ts
     const commonSystemSchemas = new Set([
@@ -171,11 +175,11 @@ export function isSystemOrTempTable(tableName: string): boolean {
       'system',
       'sqlite_master',
     ]);
-    
+
     if (commonSystemSchemas.has(schema)) {
       return true;
     }
-    
+
     // Check table name patterns (matches isSystemTableName from system-schema-filter)
     if (
       table.startsWith('pg_') ||
@@ -188,7 +192,7 @@ export function isSystemOrTempTable(tableName: string): boolean {
       return true;
     }
   }
-  
+
   // Check simple table names (temp tables, etc.)
   return (
     name.startsWith('temp_') ||

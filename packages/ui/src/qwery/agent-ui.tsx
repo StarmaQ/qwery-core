@@ -34,13 +34,7 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from '../ai-elements/reasoning';
-import {
-  Tool,
-  ToolHeader,
-  ToolContent,
-  ToolInput,
-  ToolOutput,
-} from '../ai-elements/tool';
+import { Tool, ToolHeader, ToolContent, ToolInput } from '../ai-elements/tool';
 import { Loader } from '../ai-elements/loader';
 import { ChatTransport, UIMessage, ToolUIPart } from 'ai';
 import { ChartRenderer, type ChartConfig } from './ai/charts/chart-renderer';

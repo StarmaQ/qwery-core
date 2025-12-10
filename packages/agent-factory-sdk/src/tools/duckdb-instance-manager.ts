@@ -1,5 +1,4 @@
 import type { DuckDBInstance } from '@duckdb/node-api';
-import type { Datasource } from '@qwery/domain/entities';
 import type { IDatasourceRepository } from '@qwery/domain/repositories';
 import { loadDatasources, groupDatasourcesByType } from './datasource-loader';
 import { attachForeignDatasource } from './foreign-datasource-attach';
@@ -36,9 +35,7 @@ class DuckDBInstanceManager {
   /**
    * Get or create a DuckDB instance for a conversation
    */
-  async getInstance(
-    opts: GetInstanceOptions,
-  ): Promise<DuckDBInstanceWrapper> {
+  async getInstance(opts: GetInstanceOptions): Promise<DuckDBInstanceWrapper> {
     const { conversationId, workspace, createIfNotExists = true } = opts;
 
     const key = `${workspace}:${conversationId}`;
@@ -185,7 +182,11 @@ class DuckDBInstanceManager {
 
       // Load all datasources to get their types
       const allDatasourceIds = Array.from(
-        new Set([...checkedDatasourceIds, ...currentAttached, ...currentViews.keys()]),
+        new Set([
+          ...checkedDatasourceIds,
+          ...currentAttached,
+          ...currentViews.keys(),
+        ]),
       );
       const loaded = await loadDatasources(
         allDatasourceIds,
@@ -229,7 +230,9 @@ class DuckDBInstanceManager {
         const dsId = datasource.id;
         if (!currentAttached.has(dsId) && checkedSet.has(dsId)) {
           try {
-            console.log(`[DuckDBInstanceManager] Attaching datasource: ${dsId}`);
+            console.log(
+              `[DuckDBInstanceManager] Attaching datasource: ${dsId}`,
+            );
             await attachForeignDatasource({
               connection: conn,
               datasource,
@@ -314,7 +317,10 @@ class DuckDBInstanceManager {
   /**
    * Close a specific instance
    */
-  async closeInstance(conversationId: string, workspace: string): Promise<void> {
+  async closeInstance(
+    conversationId: string,
+    workspace: string,
+  ): Promise<void> {
     const key = `${workspace}:${conversationId}`;
     const wrapper = this.instances.get(key);
 
@@ -337,9 +343,7 @@ class DuckDBInstanceManager {
     try {
       wrapper.instance.closeSync();
     } catch (error) {
-      console.warn(
-        `[DuckDBInstanceManager] Error closing instance: ${error}`,
-      );
+      console.warn(`[DuckDBInstanceManager] Error closing instance: ${error}`);
     }
 
     this.instances.delete(key);

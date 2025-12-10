@@ -65,7 +65,10 @@ export const listAvailableSheets = async (
 
   // Build datasource name map if repository provided
   const datasourceNameMap = new Map<string, string>();
-  const datasourceTypeMap = new Map<string, 'duckdb-native' | 'foreign-database'>();
+  const datasourceTypeMap = new Map<
+    string,
+    'duckdb-native' | 'foreign-database'
+  >();
   const datasourceProviderMap = new Map<string, string>();
 
   if (datasourceRepository) {
@@ -204,11 +207,14 @@ export const listAvailableSheets = async (
 
         // Extract datasource ID and get display name
         const dsId = extractDatasourceIdFromDbName(database);
-        const datasourceDisplayName = dsId && datasourceNameMap.has(dsId)
-          ? datasourceNameMap.get(dsId)!
-          : database;
+        const datasourceDisplayName =
+          dsId && datasourceNameMap.has(dsId)
+            ? datasourceNameMap.get(dsId)!
+            : database;
         const datasourceType = dsId ? datasourceTypeMap.get(dsId) : undefined;
-        const datasourceProvider = dsId ? datasourceProviderMap.get(dsId) : undefined;
+        const datasourceProvider = dsId
+          ? datasourceProviderMap.get(dsId)
+          : undefined;
 
         sheets.push({
           name: tableName,
@@ -217,7 +223,10 @@ export const listAvailableSheets = async (
           datasourceId: dsId || undefined,
           datasourceType: datasourceType,
           datasourceProvider: datasourceProvider,
-          datasourceName: datasourceDisplayName !== database ? datasourceDisplayName : undefined,
+          datasourceName:
+            datasourceDisplayName !== database
+              ? datasourceDisplayName
+              : undefined,
           database,
           schema,
           fullPath: table,
@@ -285,7 +294,11 @@ export const listAvailableSheets = async (
             type: 'view',
           });
         } finally {
-          DuckDBInstanceManager.returnConnection(conversationId, workspace, conn2);
+          DuckDBInstanceManager.returnConnection(
+            conversationId,
+            workspace,
+            conn2,
+          );
         }
       }
     }
@@ -296,5 +309,3 @@ export const listAvailableSheets = async (
     count: sheets.length,
   };
 };
-
-

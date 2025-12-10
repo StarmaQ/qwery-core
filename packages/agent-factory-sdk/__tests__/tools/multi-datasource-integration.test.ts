@@ -3,13 +3,15 @@ import { unlinkSync, existsSync, rmdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Datasource } from '@qwery/domain/entities';
+import type { IDatasourceRepository } from '@qwery/domain/repositories';
 import { DuckDBInstanceManager } from '../../src/tools/duckdb-instance-manager';
 import { initializeDatasources } from '../../src/tools/datasource-initializer';
 import { runQuery } from '../../src/tools/run-query';
-import { extractSchema } from '../../src/tools/extract-schema';
 
 // Mock datasource repository
-class MockDatasourceRepository {
+class MockDatasourceRepository
+  implements Pick<IDatasourceRepository, 'findById'>
+{
   private datasources: Map<string, Datasource> = new Map();
 
   async findById(id: string): Promise<Datasource | null> {
@@ -91,7 +93,7 @@ describe('Multi-Datasource Integration', () => {
     const results = await initializeDatasources({
       conversationId,
       datasourceIds: [gsheetConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -114,7 +116,7 @@ describe('Multi-Datasource Integration', () => {
     const results = await initializeDatasources({
       conversationId,
       datasourceIds: [postgresConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -133,7 +135,7 @@ describe('Multi-Datasource Integration', () => {
     await initializeDatasources({
       conversationId,
       datasourceIds: [gsheetConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -159,7 +161,7 @@ describe('Multi-Datasource Integration', () => {
     await initializeDatasources({
       conversationId,
       datasourceIds: [postgresConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -179,7 +181,7 @@ describe('Multi-Datasource Integration', () => {
     const results = await initializeDatasources({
       conversationId,
       datasourceIds: [gsheetConfig.id, postgresConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -198,7 +200,7 @@ describe('Multi-Datasource Integration', () => {
     await initializeDatasources({
       conversationId,
       datasourceIds: [postgresConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -243,7 +245,7 @@ describe('Multi-Datasource Integration', () => {
     await initializeDatasources({
       conversationId,
       datasourceIds: [gsheetConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -265,7 +267,7 @@ describe('Multi-Datasource Integration', () => {
     const results = await Promise.all(queries);
 
     // All queries should succeed
-    results.forEach((result, i) => {
+    results.forEach((result) => {
       expect(result).toBeDefined();
       expect(result.rows.length).toBeGreaterThan(0);
     });
@@ -291,7 +293,7 @@ describe('Multi-Datasource Integration', () => {
     await initializeDatasources({
       conversationId,
       datasourceIds: [gsheet1.id, gsheet2.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
     });
 
@@ -313,7 +315,7 @@ describe('Multi-Datasource Integration', () => {
     await initializeDatasources({
       conversationId,
       datasourceIds: [gsheetConfig.id, postgresConfig.id],
-      datasourceRepository: datasourceRepository as any,
+      datasourceRepository: datasourceRepository as IDatasourceRepository,
       workspace,
       checkedDatasourceIds: [gsheetConfig.id, postgresConfig.id],
     });
@@ -327,7 +329,7 @@ describe('Multi-Datasource Integration', () => {
       conversationId,
       workspace,
       [gsheetConfig.id], // Only GSheet checked
-      datasourceRepository as any,
+      datasourceRepository as IDatasourceRepository,
     );
 
     wrapper = DuckDBInstanceManager.getWrapper(conversationId, workspace);
@@ -339,11 +341,10 @@ describe('Multi-Datasource Integration', () => {
       conversationId,
       workspace,
       [gsheetConfig.id, postgresConfig.id],
-      datasourceRepository as any,
+      datasourceRepository as IDatasourceRepository,
     );
 
     wrapper = DuckDBInstanceManager.getWrapper(conversationId, workspace);
     expect(wrapper!.attachedDatasources.has(postgresConfig.id)).toBe(true);
   });
 });
-

@@ -47,4 +47,3 @@ export async function loader({ params }: LoaderFunctionArgs) {
     return handleDomainException(error);
   }
 }
-

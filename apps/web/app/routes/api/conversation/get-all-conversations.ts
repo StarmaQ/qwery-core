@@ -49,11 +49,18 @@ export async function action({ request }: ActionFunctionArgs) {
     // POST /api/conversations - Create conversation
     if (request.method === 'POST') {
       const body = await request.json();
-      
+
       // Generate title from seedMessage if provided and title is default
-      if (body.seedMessage && (!body.title || body.title === 'New Conversation' || body.title === body.seedMessage.slice(0, 100))) {
+      if (
+        body.seedMessage &&
+        (!body.title ||
+          body.title === 'New Conversation' ||
+          body.title === body.seedMessage.slice(0, 100))
+      ) {
         try {
-          const generatedTitle = await generateConversationTitle(body.seedMessage);
+          const generatedTitle = await generateConversationTitle(
+            body.seedMessage,
+          );
           body.title = generatedTitle;
         } catch (error) {
           console.error('Error generating conversation title:', error);
@@ -63,7 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
           }
         }
       }
-      
+
       const useCase = new CreateConversationService(repository);
       const conversation = await useCase.execute(body);
       return Response.json(conversation, { status: 201 });

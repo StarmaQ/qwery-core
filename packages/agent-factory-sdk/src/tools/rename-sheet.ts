@@ -52,8 +52,7 @@ export const renameSheet = async (
       );
     } catch (error) {
       // If error is about table not found, that's good - name is available
-      const errorMsg =
-        error instanceof Error ? error.message : String(error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
       if (
         !errorMsg.includes('does not exist') &&
         !errorMsg.includes('not found') &&
@@ -78,5 +77,3 @@ export const renameSheet = async (
     DuckDBInstanceManager.returnConnection(conversationId, workspace, conn);
   }
 };
-
-
