@@ -49,7 +49,7 @@ describe('Multi-Datasource Integration', () => {
     datasource_provider: 'postgresql',
     config: {
       connectionUrl:
-        'postgresql://postgres:YUX5he1NC3cn@angry-star-sooomu.us-west-aws.db.guepard.run:22050/postgres',
+        'postgresql://postgres:testpass@example.db.example.com:5432/postgres',
     },
     slug: 'test-postgres',
     created_at: new Date(),

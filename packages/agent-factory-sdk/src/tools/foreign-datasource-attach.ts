@@ -1,6 +1,10 @@
 import type { Datasource } from '@qwery/domain/entities';
 import type { SimpleSchema } from '@qwery/domain/entities';
 import type { DuckDBInstance } from '@duckdb/node-api';
+import {
+  getProviderMapping,
+  getSupportedProviders,
+} from './provider-registry';
 
 // Connection type from DuckDB instance
 type Connection = Awaited<ReturnType<DuckDBInstance['connect']>>;
@@ -40,76 +44,54 @@ export async function attachForeignDatasourceToConnection(
   opts: AttachToConnectionOptions,
 ): Promise<void> {
   const { conn, datasource } = opts;
-  const provider = datasource.datasource_provider.toLowerCase();
+  const provider = datasource.datasource_provider;
   const config = datasource.config as Record<string, unknown>;
+
+  // Get provider mapping using abstraction
+  const mapping = await getProviderMapping(provider);
+  if (!mapping) {
+    const supported = await getSupportedProviders();
+    throw new Error(
+      `Foreign database type not supported: ${provider}. Supported types: ${supported.join(', ')}`,
+    );
+  }
 
   // Generate a unique database name for this datasource attachment
   const attachedDatabaseName = `ds_${datasource.id.replace(/-/g, '_')}`;
 
-  // Install and load the appropriate extension
+  // Install and load the appropriate extension if needed
+  if (mapping.requiresExtension && mapping.extensionName) {
+    await conn.run(`INSTALL ${mapping.extensionName}`);
+    await conn.run(`LOAD ${mapping.extensionName}`);
+  }
+
+  // Get connection string using abstraction
+  let connectionString: string;
+  try {
+    connectionString = mapping.getConnectionString(config);
+  } catch (error) {
+    // Skip this datasource if connection string is missing (matches main branch behavior)
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (errorMsg.includes('requires')) {
+      return;
+    }
+    throw error;
+  }
+
+  // Build attach query based on DuckDB type
   let attachQuery: string;
-  let connectionUrlForLog: string | undefined;
-
-  switch (provider) {
-    case 'postgresql':
-    case 'neon':
-    case 'supabase': {
-      await conn.run('INSTALL postgres');
-      await conn.run('LOAD postgres');
-
-      const connectionUrl = config.connectionUrl as string;
-      if (!connectionUrl) {
-        return;
-      }
-
-      connectionUrlForLog = connectionUrl;
-      attachQuery = `ATTACH '${connectionUrl.replace(/'/g, "''")}' AS "${attachedDatabaseName}" (TYPE POSTGRES)`;
-      break;
-    }
-
-    case 'mysql': {
-      await conn.run('INSTALL mysql');
-      await conn.run('LOAD mysql');
-
-      const connectionUrl =
-        (config.connectionUrl as string) ||
-        `host=${(config.host as string) || 'localhost'} port=${
-          (config.port as number) || 3306
-        } user=${(config.user as string) || 'root'} password=${
-          (config.password as string) || ''
-        } database=${(config.database as string) || ''}`;
-
-      attachQuery = `ATTACH '${connectionUrl.replace(/'/g, "''")}' AS "${attachedDatabaseName}" (TYPE MYSQL)`;
-      break;
-    }
-
-    case 'sqlite': {
-      const sqlitePath =
-        (config.path as string) || (config.connectionUrl as string);
-      if (!sqlitePath) {
-        // Skip this datasource if path is missing (matches main branch behavior)
-        return;
-      }
-
-      attachQuery = `ATTACH '${sqlitePath.replace(/'/g, "''")}' AS "${attachedDatabaseName}"`;
-      break;
-    }
-
-    default: {
-      throw new Error(
-        `Foreign database type not supported: ${provider}. Supported types: postgresql, mysql, sqlite`,
-      );
-    }
+  if (mapping.duckdbType === 'SQLITE') {
+    attachQuery = `ATTACH '${connectionString.replace(/'/g, "''")}' AS "${attachedDatabaseName}"`;
+  } else {
+    attachQuery = `ATTACH '${connectionString.replace(/'/g, "''")}' AS "${attachedDatabaseName}" (TYPE ${mapping.duckdbType})`;
   }
 
   // Attach the foreign database
   try {
     await conn.run(attachQuery);
-    if (connectionUrlForLog) {
-      console.log(
-        `[ReadDataAgent] Attached ${attachedDatabaseName} with query: ${connectionUrlForLog.replace(/'/g, "''")}`,
-      );
-    }
+    console.log(
+      `[ReadDataAgent] Attached ${attachedDatabaseName} (${mapping.duckdbType})`,
+    );
   } catch (error) {
     // If already attached, that's okay
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -186,73 +168,45 @@ export async function attachForeignDatasource(
 ): Promise<AttachResult> {
   const { connection: conn, datasource } = opts;
 
-  const provider = datasource.datasource_provider.toLowerCase();
+  const provider = datasource.datasource_provider;
   const config = datasource.config as Record<string, unknown>;
   const tablesInfo: AttachResult['tables'] = [];
+
+  // Get provider mapping using abstraction
+  const mapping = await getProviderMapping(provider);
+  if (!mapping) {
+    const supported = await getSupportedProviders();
+    throw new Error(
+      `Foreign database type not supported: ${provider}. Supported types: ${supported.join(', ')}`,
+    );
+  }
 
   // Generate a unique database name for this datasource attachment
   const attachedDatabaseName = `ds_${datasource.id.replace(/-/g, '_')}`;
 
-  // Install and load the appropriate extension
+  // Install and load the appropriate extension if needed
+  if (mapping.requiresExtension && mapping.extensionName) {
+    await conn.run(`INSTALL ${mapping.extensionName}`);
+    await conn.run(`LOAD ${mapping.extensionName}`);
+  }
+
+  // Get connection string using abstraction
+  const connectionString = mapping.getConnectionString(config);
+
+  // Build attach query based on DuckDB type
   let attachQuery: string;
-
-  switch (provider) {
-    case 'postgresql':
-    case 'neon':
-    case 'supabase': {
-      await conn.run('INSTALL postgres');
-      await conn.run('LOAD postgres');
-
-      const pgConnectionUrl = config.connectionUrl as string;
-      if (!pgConnectionUrl) {
-        throw new Error(
-          'PostgreSQL datasource requires connectionUrl in config',
-        );
-      }
-
-      attachQuery = `ATTACH '${pgConnectionUrl.replace(/'/g, "''")}' AS "${attachedDatabaseName}" (TYPE POSTGRES)`;
-      break;
-    }
-
-    case 'mysql': {
-      await conn.run('INSTALL mysql');
-      await conn.run('LOAD mysql');
-
-      const mysqlHost = (config.host as string) || 'localhost';
-      const mysqlPort = (config.port as number) || 3306;
-      const mysqlUser = (config.user as string) || 'root';
-      const mysqlPassword = (config.password as string) || '';
-      const mysqlDatabase = (config.database as string) || '';
-
-      const mysqlConnectionString = `host=${mysqlHost} port=${mysqlPort} user=${mysqlUser} password=${mysqlPassword} database=${mysqlDatabase}`;
-      attachQuery = `ATTACH '${mysqlConnectionString.replace(/'/g, "''")}' AS "${attachedDatabaseName}" (TYPE MYSQL)`;
-      break;
-    }
-
-    case 'sqlite': {
-      const sqlitePath =
-        (config.path as string) || (config.connectionUrl as string);
-      if (!sqlitePath) {
-        throw new Error(
-          'SQLite datasource requires path or connectionUrl in config',
-        );
-      }
-
-      attachQuery = `ATTACH '${sqlitePath.replace(/'/g, "''")}' AS "${attachedDatabaseName}"`;
-      break;
-    }
-
-    default: {
-      throw new Error(
-        `Foreign database type not supported: ${provider}. Supported types: postgresql, mysql, sqlite`,
-      );
-    }
+  if (mapping.duckdbType === 'SQLITE') {
+    attachQuery = `ATTACH '${connectionString.replace(/'/g, "''")}' AS "${attachedDatabaseName}"`;
+  } else {
+    attachQuery = `ATTACH '${connectionString.replace(/'/g, "''")}' AS "${attachedDatabaseName}" (TYPE ${mapping.duckdbType})`;
   }
 
   // Attach the foreign database
   try {
     await conn.run(attachQuery);
-    console.debug(`[ForeignDatasourceAttach] Attached ${attachedDatabaseName}`);
+    console.debug(
+      `[ForeignDatasourceAttach] Attached ${attachedDatabaseName} (${mapping.duckdbType})`,
+    );
   } catch (error) {
     // If already attached, that's okay
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -264,39 +218,8 @@ export async function attachForeignDatasource(
     }
   }
 
-  // Get list of tables from the attached database
-  // Query information_schema to get tables
-  let tablesQuery: string;
-  if (
-    provider === 'postgresql' ||
-    provider === 'neon' ||
-    provider === 'supabase'
-  ) {
-    tablesQuery = `
-        SELECT table_schema, table_name
-        FROM ${attachedDatabaseName}.information_schema.tables
-        WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
-        AND table_type = 'BASE TABLE'
-        ORDER BY table_schema, table_name
-      `;
-  } else if (provider === 'mysql') {
-    tablesQuery = `
-        SELECT table_schema, table_name
-        FROM ${attachedDatabaseName}.information_schema.tables
-        WHERE table_schema NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')
-        AND table_type = 'BASE TABLE'
-        ORDER BY table_schema, table_name
-      `;
-  } else {
-    // SQLite
-    tablesQuery = `
-        SELECT 'main' as table_schema, name as table_name
-        FROM ${attachedDatabaseName}.sqlite_master
-        WHERE type = 'table'
-        AND name NOT LIKE 'sqlite_%'
-        ORDER BY name
-      `;
-  }
+  // Get list of tables from the attached database using abstraction
+  const tablesQuery = mapping.getTablesQuery(attachedDatabaseName);
 
   const tablesReader = await conn.runAndReadAll(tablesQuery);
   await tablesReader.readAll();

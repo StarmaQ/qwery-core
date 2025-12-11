@@ -251,7 +251,7 @@ export function ToolPart({ part, messageId, index }: ToolPartProps) {
       );
     }
 
-    // Handle getSchema tool with SchemaVisualizer
+    // Handle getSchema tool with SchemaVisualizer or AvailableSheetsVisualizer
     if (part.type === 'tool-getSchema' && part.output) {
       const output = part.output as {
         schema?: {
@@ -262,35 +262,37 @@ export function ToolPart({ part, messageId, index }: ToolPartProps) {
             columns: Array<{ columnName: string; columnType: string }>;
           }>;
         };
+        allTables?: string[];
+        tableCount?: number;
       } | null;
-      if (output?.schema) {
-        return <SchemaVisualizer schema={output.schema} />;
-      }
-    }
 
-    // Handle listAvailableSheets tool with AvailableSheetsVisualizer
-    if (part.type === 'tool-listAvailableSheets' && part.output) {
-      const output = part.output as {
-        sheets?: Array<{
-          name: string;
-          type: 'view' | 'table' | 'attached_table';
-        }>;
-        count?: number;
-      } | null;
-      if (output?.sheets) {
-        // Map tool output to visualizer format
-        const mappedSheets = output.sheets.map((sheet) => ({
-          name: sheet.name,
-          type: sheet.type === 'attached_table' ? 'table' : sheet.type,
-        }));
+      // If allTables is present, this was called without viewName to list all sheets
+      if (output?.allTables && output.allTables.length > 0) {
+        // Map table names to sheet format
+        const mappedSheets = output.allTables.map((tableName) => {
+          // Determine type based on table name format
+          // Map attached_table to table for AvailableSheet type
+          const type: 'view' | 'table' = tableName.includes('.')
+            ? 'table'
+            : 'view';
+          return {
+            name: tableName,
+            type,
+          };
+        });
         return (
           <AvailableSheetsVisualizer
             data={{
               sheets: mappedSheets,
-              message: `Found ${output.count ?? mappedSheets.length} sheet${(output.count ?? mappedSheets.length) !== 1 ? 's' : ''}`,
+              message: `Found ${output.tableCount ?? mappedSheets.length} sheet${(output.tableCount ?? mappedSheets.length) !== 1 ? 's' : ''}`,
             }}
           />
         );
+      }
+
+      // Otherwise, show schema for specific view
+      if (output?.schema) {
+        return <SchemaVisualizer schema={output.schema} />;
       }
     }
 

@@ -12,7 +12,6 @@ import { resolveModel } from '../../services';
 import { testConnection } from '../../tools/test-connection';
 import type { SimpleSchema, SimpleTable } from '@qwery/domain/entities';
 import { runQuery } from '../../tools/run-query';
-import { listAvailableSheets } from '../../tools/list-available-sheets';
 import { viewSheet } from '../../tools/view-sheet';
 import { renameSheet } from '../../tools/rename-sheet';
 import { deleteSheet } from '../../tools/delete-sheet';
@@ -105,6 +104,12 @@ export const readDataAgent = async (
               `[ReadDataAgent] Failed to initialize ${failed.length} datasource(s):`,
               failed.map((f) => `${f.datasourceName} (${f.error})`).join(', '),
             );
+            // Log detailed error for debugging
+            for (const fail of failed) {
+              console.warn(
+                `[ReadDataAgent] Datasource ${fail.datasourceName} (${fail.datasourceId}) error: ${fail.error}`,
+              );
+            }
           }
         } else {
           console.log(
@@ -603,51 +608,6 @@ export const readDataAgent = async (
           return {
             result: result,
           };
-        },
-      }),
-      listAvailableSheets: tool({
-        description:
-          'List all available sheets/views in the database. Returns a list of sheet names and their types (view or table).',
-        inputSchema: z.object({}),
-        execute: async () => {
-          const workspace = getWorkspace();
-          if (!workspace) {
-            throw new Error('WORKSPACE environment variable is not set');
-          }
-          if (!repositories?.datasource) {
-            throw new Error('Datasource repository not available');
-          }
-
-          // Sync datasources before listing (same as getSchema and runQuery)
-          if (repositories) {
-            try {
-              const getConversationService = new GetConversationBySlugService(
-                repositories.conversation,
-              );
-              const conversation =
-                await getConversationService.execute(conversationId);
-              if (conversation?.datasources?.length) {
-                await DuckDBInstanceManager.syncDatasources(
-                  conversationId,
-                  workspace,
-                  conversation.datasources,
-                  repositories.datasource,
-                );
-              }
-            } catch (error) {
-              console.warn(
-                '[ReadDataAgent] Failed to sync datasources before listing:',
-                error,
-              );
-            }
-          }
-
-          const result = await listAvailableSheets({
-            conversationId,
-            workspace,
-            datasourceRepository: repositories.datasource,
-          });
-          return result;
         },
       }),
       renameSheet: tool({
