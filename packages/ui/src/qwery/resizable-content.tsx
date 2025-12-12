@@ -69,7 +69,6 @@ export const ResizableContent = forwardRef<ResizableContentRef, ResizableContent
 
   return (
     <ResizablePanelGroup
-      key={isOpen ? 'open' : 'closed'}
       direction="horizontal"
       className="h-full w-full overflow-hidden"
     >

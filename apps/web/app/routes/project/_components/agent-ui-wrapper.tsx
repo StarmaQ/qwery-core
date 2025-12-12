@@ -26,6 +26,11 @@ export interface AgentUIWrapperRef {
   sendMessage: (text: string) => void;
 }
 
+export interface SidebarControl {
+  open: () => void;
+  sendMessage?: (text: string) => void;
+}
+
 export interface AgentUIWrapperProps {
   conversationSlug: string;
   initialMessages?: MessageOutput[];
@@ -147,6 +152,13 @@ export const AgentUIWrapper = forwardRef<
     }));
   }, [datasources.data]);
 
+  const transport = useMemo(
+    () => (model: string) => {
+      return transportFactory(conversationSlug, model, repositories);
+    },
+    [conversationSlug, repositories],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
@@ -155,13 +167,6 @@ export const AgentUIWrapper = forwardRef<
       },
     }),
     [],
-  );
-
-  const transport = useMemo(
-    () => (model: string) => {
-      return transportFactory(conversationSlug, model, repositories);
-    },
-    [conversationSlug, repositories],
   );
 
   const handleEmitFinish = useCallback(() => {

@@ -17,7 +17,7 @@ import { LayoutFooter } from '../layout/_components/layout-footer';
 import { LayoutMobileNavigation } from '../layout/_components/layout-mobile-navigation';
 import { ProjectLayoutTopBar } from './_components/project-topbar';
 import { ProjectSidebar } from './_components/project-sidebar';
-import { AgentUIWrapper } from './_components/agent-ui-wrapper';
+import { AgentUIWrapper, type SidebarControl } from './_components/agent-ui-wrapper';
 import { useWorkspace } from '~/lib/context/workspace-context';
 import { WorkspaceModeEnum } from '@qwery/domain/enums';
 import { AgentTabs, AgentStatusProvider } from '@qwery/ui/ai';
@@ -48,11 +48,16 @@ function SidebarLayoutInner(props: Route.ComponentProps & React.PropsWithChildre
   const conversationSlugFromUrl = searchParams.get('conversation');
   const conversationSlug = conversationSlugFromUrl || 'default';
 
+  const agentWrapperRef = useRef<{ sendMessage: (text: string) => void } | null>(null);
+  
   // Register sidebar control for notebook pages only
   useEffect(() => {
     if (isNotebookPage && sidebarRef.current) {
       registerSidebarControl({
         open: () => sidebarRef.current?.open(),
+        sendMessage: (text: string) => {
+          agentWrapperRef.current?.sendMessage(text);
+        },
       });
     }
   }, [isNotebookPage, registerSidebarControl]);
@@ -97,6 +102,7 @@ function SidebarLayoutInner(props: Route.ComponentProps & React.PropsWithChildre
           {isNotebookPage && (
             <AgentSidebar>
               <AgentUIWrapper 
+                ref={agentWrapperRef}
                 key={conversationSlug}
                 conversationSlug={conversationSlug}
                 initialMessages={messages.data}

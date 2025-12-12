@@ -3,8 +3,8 @@
 import { createContext, useContext, useRef, type ReactNode } from 'react';
 
 type NotebookSidebarContextValue = {
-  openSidebar: (conversationSlug: string) => void;
-  registerSidebarControl: (control: { open: () => void }) => void;
+  openSidebar: (conversationSlug: string, messageToSend?: string) => void;
+  registerSidebarControl: (control: { open: () => void; sendMessage?: (text: string) => void }) => void;
 };
 
 const NotebookSidebarContext = createContext<NotebookSidebarContextValue | null>(
@@ -16,9 +16,9 @@ export function NotebookSidebarProvider({
 }: {
   children: ReactNode;
 }) {
-  const sidebarControlRef = useRef<{ open: () => void } | null>(null);
+  const sidebarControlRef = useRef<{ open: () => void; sendMessage?: (text: string) => void } | null>(null);
 
-  const openSidebar = (conversationSlug: string) => {
+  const openSidebar = (conversationSlug: string, messageToSend?: string) => {
     // Update URL with conversation slug
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set('conversation', conversationSlug);
@@ -26,9 +26,16 @@ export function NotebookSidebarProvider({
     
     // Directly open sidebar via control
     sidebarControlRef.current?.open();
+    
+    // If a message is provided, send it after a brief delay to ensure sidebar is open
+    if (messageToSend && sidebarControlRef.current?.sendMessage) {
+      setTimeout(() => {
+        sidebarControlRef.current?.sendMessage?.(messageToSend);
+      }, 100);
+    }
   };
 
-  const registerSidebarControl = (control: { open: () => void }) => {
+  const registerSidebarControl = (control: { open: () => void; sendMessage?: (text: string) => void }) => {
     sidebarControlRef.current = control;
   };
 
@@ -55,4 +62,5 @@ export function useNotebookSidebar() {
   }
   return context;
 }
+
 
