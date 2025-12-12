@@ -374,11 +374,64 @@ export const readDataAgent = async (
             const dbRows = dbReader.getRowObjectsJS() as Array<{
               name: string;
             }>;
-            const databases = dbRows.map((r) => r.name);
+            const allDatabases = dbRows.map((r) => r.name);
             const dbListTime = performance.now() - dbListStartTime;
             console.log(
-              `[ReadDataAgent] [PERF] pragma_database_list took ${dbListTime.toFixed(2)}ms (found ${databases.length} databases)`,
+              `[ReadDataAgent] [PERF] pragma_database_list took ${dbListTime.toFixed(2)}ms (found ${allDatabases.length} databases)`,
             );
+
+            // Filter databases to only include those from conversation datasources
+            let allowedDatabases = new Set<string>(allDatabases);
+            if (repositories) {
+              try {
+                const getConversationService = new GetConversationBySlugService(
+                  repositories.conversation,
+                );
+                const conversation =
+                  await getConversationService.execute(conversationId);
+                if (conversation?.datasources?.length) {
+                  const { getDatasourceDatabaseName } = await import(
+                    '../../tools/datasource-name-utils'
+                  );
+                  const { loadDatasources } = await import(
+                    '../../tools/datasource-loader'
+                  );
+
+                  const allDatasources = await loadDatasources(
+                    conversation.datasources,
+                    repositories.datasource,
+                  );
+
+                  // Build set of allowed database names from conversation datasources
+                  const allowedDbNames = new Set<string>();
+                  for (const { datasource } of allDatasources) {
+                    const dbName = getDatasourceDatabaseName(datasource);
+                    allowedDbNames.add(dbName);
+                  }
+
+                  // Filter: only include 'main' and databases that match conversation datasources
+                  allowedDatabases = new Set<string>();
+                  allowedDatabases.add('main'); // Always include main database
+                  for (const db of allDatabases) {
+                    if (allowedDbNames.has(db)) {
+                      allowedDatabases.add(db);
+                    }
+                  }
+
+                  console.log(
+                    `[ReadDataAgent] Filtered databases: ${allDatabases.length} total, ${allowedDatabases.size} from conversation datasources`,
+                  );
+                }
+              } catch (error) {
+                console.warn(
+                  '[ReadDataAgent] Failed to filter databases by conversation datasources:',
+                  error,
+                );
+                // Continue with all databases if filtering fails
+              }
+            }
+
+            const databases = Array.from(allowedDatabases);
 
             const targets: Array<{
               db: string;
@@ -420,9 +473,9 @@ export const readDataAgent = async (
               }> = [];
 
               if (isAttachedDb) {
-                // For attached databases, query their information_schema directly
+                // For attached databases, try information_schema first (works for real DBs like PostgreSQL)
+                // If that fails, fall back to SHOW TABLES (works for in-memory databases like Google Sheets)
                 try {
-                  // Include both tables AND views in single query
                   const tablesReader = await conn.runAndReadAll(`
                     SELECT table_schema, table_name, table_type
                     FROM "${escapedDb}".information_schema.tables
@@ -434,13 +487,33 @@ export const readDataAgent = async (
                     table_name: string;
                     table_type: string;
                   }>;
-                  // No separate views query needed - already included above
                   viewRows = [];
                 } catch (error) {
-                  console.warn(
-                    `[ReadDataAgent] Failed to query tables from attached database ${db}: ${error}`,
-                  );
-                  continue;
+                  // Fallback: Use SHOW TABLES for in-memory databases (like Google Sheets)
+                  try {
+                    const showTablesReader = await conn.runAndReadAll(
+                      `SHOW TABLES FROM "${escapedDb}"`,
+                    );
+                    await showTablesReader.readAll();
+                    const showTablesRows =
+                      showTablesReader.getRowObjectsJS() as Array<{
+                        name: string;
+                      }>;
+                    // Convert to same format as information_schema
+                    tableRows = showTablesRows.map((row) => ({
+                      table_schema: 'main',
+                      table_name: row.name,
+                      table_type: 'BASE TABLE',
+                    }));
+                    viewRows = [];
+                  } catch (fallbackError) {
+                    console.warn(
+                      `[ReadDataAgent] Failed to query tables from attached database ${db} (both information_schema and SHOW TABLES failed):`,
+                      error,
+                      fallbackError,
+                    );
+                    continue;
+                  }
                 }
               } else {
                 // For main database, query the default information_schema
