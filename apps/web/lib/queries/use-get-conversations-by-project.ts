@@ -16,6 +16,5 @@ export function useGetConversationsByProject(
     queryFn: () => useCase.execute(projectId!),
     enabled: !!projectId,
     staleTime: 30 * 1000,
-    refetchInterval: 3000,
   });
 }
