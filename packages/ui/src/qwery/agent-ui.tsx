@@ -227,7 +227,7 @@ export default function QweryAgentUI(props: QweryAgentUIProps) {
 
     // Small delay to ensure state update, then regenerate
     setTimeout(() => {
-      regenerate();
+    regenerate();
     }, 0);
   }, [messages, regenerate, setMessages]);
 
@@ -470,15 +470,15 @@ export default function QweryAgentUI(props: QweryAgentUIProps) {
                                           )}
                                         >
                                           {message.role === 'assistant' && (
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              onClick={handleRegenerate}
-                                              className="h-7 w-7"
-                                              title="Retry"
-                                            >
-                                              <RefreshCcwIcon className="size-3" />
-                                            </Button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  onClick={handleRegenerate}
+                                                  className="h-7 w-7"
+                                                  title="Retry"
+                                                >
+                                                  <RefreshCcwIcon className="size-3" />
+                                                </Button>
                                           )}
                                           <Button
                                             variant="ghost"
@@ -560,20 +560,20 @@ export default function QweryAgentUI(props: QweryAgentUIProps) {
                                   typeof toolPart.toolName === 'string'
                                     ? toolPart.toolName
                                     : toolPart.type.replace('tool-', '');
-                                return (
-                                  <Tool
-                                    key={`${message.id}-${i}`}
+                              return (
+                                <Tool
+                                  key={`${message.id}-${i}`}
                                     defaultOpen={false}
-                                  >
-                                    <ToolHeader
-                                      title={toolName}
-                                      type={toolPart.type}
-                                      state={toolPart.state}
-                                    />
-                                    <ToolContent>
+                                >
+                                  <ToolHeader
+                                    title={toolName}
+                                    type={toolPart.type}
+                                    state={toolPart.state}
+                                  />
+                                  <ToolContent>
                                       {toolPart.input != null ? (
-                                        <ToolInput input={toolPart.input} />
-                                      ) : null}
+                                      <ToolInput input={toolPart.input} />
+                                    ) : null}
                                       <div className="flex items-center justify-center py-8">
                                         <Loader size={20} />
                                       </div>

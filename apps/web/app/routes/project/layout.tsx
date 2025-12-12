@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router';
+import { Outlet, useSearchParams, useLocation } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   Page,
@@ -10,6 +11,7 @@ import {
 } from '@qwery/ui/page';
 import { SidebarProvider } from '@qwery/ui/shadcn-sidebar';
 import type { Route } from '~/types/app/routes/project/+types/layout';
+import type { ResizableContentRef } from '@qwery/ui/page';
 
 import { LayoutFooter } from '../layout/_components/layout-footer';
 import { LayoutMobileNavigation } from '../layout/_components/layout-mobile-navigation';
@@ -20,10 +22,7 @@ import { useWorkspace } from '~/lib/context/workspace-context';
 import { WorkspaceModeEnum } from '@qwery/domain/enums';
 import { AgentTabs, AgentStatusProvider } from '@qwery/ui/ai';
 import { useGetMessagesByConversationSlug } from '~/lib/queries/use-get-messages';
-import {
-  AgentSidebarProvider,
-  useAgentSidebar,
-} from '~/lib/context/agent-sidebar-context';
+import { NotebookSidebarProvider, useNotebookSidebar } from '~/lib/context/notebook-sidebar-context';
 
 export async function loader(_args: Route.LoaderArgs) {
   return {
@@ -33,32 +32,55 @@ export async function loader(_args: Route.LoaderArgs) {
   };
 }
 
-function SidebarLayoutInner(
-  props: Route.ComponentProps & React.PropsWithChildren,
-) {
+function SidebarLayoutInner(props: Route.ComponentProps & React.PropsWithChildren) {
   const { layoutState } = props.loaderData;
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { repositories } = useWorkspace();
-  const { isOpen, conversationSlug, toggleSidebar } = useAgentSidebar();
+  const sidebarRef = useRef<ResizableContentRef>(null);
+  const { registerSidebarControl } = useNotebookSidebar();
+  
+  // Only enable notebook sidebar behavior on notebook pages
+  const isNotebookPage = location.pathname.startsWith('/notebook/');
+  
+  // Get conversation slug from URL params (for notebook chat integration)
+  // If on conversation page, use that conversation; otherwise use default
+  const conversationSlugFromUrl = searchParams.get('conversation');
+  const conversationSlug = conversationSlugFromUrl || 'default';
 
-  // Use conversation slug from context, fallback to 'default'
-  const activeConversationSlug = conversationSlug || 'default';
+  // Register sidebar control for notebook pages only
+  useEffect(() => {
+    if (isNotebookPage && sidebarRef.current) {
+      registerSidebarControl({
+        open: () => sidebarRef.current?.open(),
+      });
+    }
+  }, [isNotebookPage, registerSidebarControl]);
 
-  // Load messages for the conversation when slug changes
+  // Open sidebar when conversation param is present (only on notebook pages)
+  const shouldOpenSidebar = isNotebookPage && !!conversationSlugFromUrl;
+
+  // Load messages for the conversation when slug changes (only on notebook pages)
   // Add refetch interval when sidebar is open to catch newly persisted messages
   const messages = useGetMessagesByConversationSlug(
     repositories.conversation,
     repositories.message,
-    activeConversationSlug,
+    conversationSlug,
     {
+      // Only fetch messages on notebook pages when sidebar should be open
+      enabled: shouldOpenSidebar,
       // Refetch every 2 seconds when sidebar is open to catch new messages
-      refetchInterval: isOpen ? 2000 : undefined,
+      refetchInterval: shouldOpenSidebar ? 2000 : undefined,
     },
   );
 
   return (
     <AgentStatusProvider>
       <SidebarProvider defaultOpen={layoutState.open}>
-        <Page agentSidebarOpen={isOpen}>
+        <Page 
+          agentSidebarOpen={shouldOpenSidebar}
+          agentSidebarRef={isNotebookPage ? sidebarRef : undefined}
+        >
           <PageTopNavigation>
             <ProjectLayoutTopBar />
           </PageTopNavigation>
@@ -71,15 +93,16 @@ function SidebarLayoutInner(
           <PageFooter>
             <LayoutFooter />
           </PageFooter>
-          <AgentSidebar>
-            {isOpen && conversationSlug && (
-              <AgentUIWrapper
+          {/* Only show AgentSidebar on notebook pages */}
+          {isNotebookPage && (
+            <AgentSidebar>
+              <AgentUIWrapper 
                 key={conversationSlug}
                 conversationSlug={conversationSlug}
                 initialMessages={messages.data}
               />
-            )}
-          </AgentSidebar>
+            </AgentSidebar>
+          )}
           {props.children}
         </Page>
       </SidebarProvider>
@@ -89,9 +112,9 @@ function SidebarLayoutInner(
 
 function SidebarLayout(props: Route.ComponentProps & React.PropsWithChildren) {
   return (
-    <AgentSidebarProvider>
+    <NotebookSidebarProvider>
       <SidebarLayoutInner {...props} />
-    </AgentSidebarProvider>
+    </NotebookSidebarProvider>
   );
 }
 
