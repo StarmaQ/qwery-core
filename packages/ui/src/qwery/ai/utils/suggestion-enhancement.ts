@@ -68,9 +68,11 @@ export function createSuggestionButton(
 
     const button = document.createElement('button');
     button.setAttribute('data-suggestion-btn', 'true');
+    button.setAttribute('type', 'button');
+    button.setAttribute('aria-label', `Send suggestion: ${suggestionText.substring(0, 50)}${suggestionText.length > 50 ? '...' : ''}`);
+    button.setAttribute('title', 'Send this suggestion');
     button.style.cssText =
         'opacity: 0; transition: opacity 0.2s ease-in-out; height: 18px; width: 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: transparent; border: none; cursor: pointer; padding: 0; flex-shrink: 0;';
-    button.title = 'Send this suggestion';
 
     let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
 

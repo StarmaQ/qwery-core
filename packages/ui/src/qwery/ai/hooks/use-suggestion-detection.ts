@@ -1,4 +1,4 @@
-import { useMemo, RefObject } from 'react';
+import { useMemo, RefObject, useState, useEffect } from 'react';
 import { isSuggestionPattern, extractSuggestionText, validateSuggestionElement } from '../utils/suggestion-pattern';
 
 export interface DetectedSuggestion {
@@ -10,31 +10,41 @@ export function useSuggestionDetection(
   containerRef: RefObject<HTMLElement | null>,
   isReady: boolean,
 ): DetectedSuggestion[] {
+  const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setContainerElement(containerRef.current);
+  }, [containerRef]);
+
   return useMemo(() => {
-    if (!containerRef.current || !isReady) {
+    if (!containerElement || !isReady) {
       return [];
     }
 
-    const container = containerRef.current;
-    const allElements = Array.from(container.querySelectorAll('li, p'));
-    const detected: DetectedSuggestion[] = [];
+    try {
+      const allElements = Array.from(containerElement.querySelectorAll('li, p'));
+      const detected: DetectedSuggestion[] = [];
 
-    allElements.forEach((element) => {
-      if (element.querySelector('[data-suggestion-button]')) {
-        return;
-      }
-
-      const elementText = element.textContent || '';
-      
-      if (isSuggestionPattern(elementText)) {
-        const suggestionText = extractSuggestionText(elementText);
-        if (suggestionText && suggestionText.length > 0 && validateSuggestionElement(element, elementText)) {
-          detected.push({ element, suggestionText });
+      allElements.forEach((element) => {
+        if (element.querySelector('[data-suggestion-button]')) {
+          return;
         }
-      }
-    });
 
-    return detected;
-  }, [containerRef.current, isReady]);
+        const elementText = element.textContent || '';
+        
+        if (isSuggestionPattern(elementText)) {
+          const suggestionText = extractSuggestionText(elementText);
+          if (suggestionText && suggestionText.length > 0 && validateSuggestionElement(element, elementText)) {
+            detected.push({ element, suggestionText });
+          }
+        }
+      });
+
+      return detected;
+    } catch (error) {
+      console.error('[useSuggestionDetection] Error detecting suggestions:', error);
+      return [];
+    }
+  }, [containerElement, isReady]);
 }
 

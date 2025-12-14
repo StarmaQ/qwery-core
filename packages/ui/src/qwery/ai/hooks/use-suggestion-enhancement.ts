@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import type { useChat } from '@ai-sdk/react';
-import type { UIMessage } from 'ai';
 import { createSuggestionButton, generateSuggestionId, cleanSuggestionPatterns, scrollToConversationBottom } from '../utils/suggestion-enhancement';
 import type { DetectedSuggestion } from './use-suggestion-detection';
 
@@ -21,59 +20,86 @@ export function useSuggestionEnhancement({
   contextMessages,
 }: UseSuggestionEnhancementOptions): void {
   const processedElementsRef = useRef<Set<Element>>(new Set());
+  const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !sendMessage || detectedSuggestions.length === 0) {
+    setContainerElement(containerRef.current);
+  }, [containerRef]);
+
+  const handleSuggestionClick = useCallback(
+    (cleanSuggestionText: string, sourceSuggestionId: string | undefined) => {
+      if (!sendMessage) return;
+
+      try {
+        let messageText = cleanSuggestionText;
+        const { lastUserQuestion, lastAssistantResponse } = contextMessages;
+        
+        if (lastUserQuestion || lastAssistantResponse || sourceSuggestionId) {
+          const contextData = JSON.stringify({
+            lastUserQuestion,
+            lastAssistantResponse,
+            sourceSuggestionId,
+          });
+          messageText = `__QWERY_CONTEXT__${contextData}__QWERY_CONTEXT_END__${cleanSuggestionText}`;
+        }
+        
+        sendMessage({ text: messageText }, {});
+        scrollToConversationBottom();
+      } catch (error) {
+        console.error('[useSuggestionEnhancement] Error sending message:', error);
+      }
+    },
+    [sendMessage, contextMessages],
+  );
+
+  useEffect(() => {
+    if (!containerElement || !sendMessage || detectedSuggestions.length === 0) {
       return;
     }
 
-    const container = containerRef.current;
     const cleanupFunctions: Array<() => void> = [];
+    let rafId: number | null = null;
 
-    try {
-      cleanSuggestionPatterns(container);
+    const processSuggestions = () => {
+      try {
+        cleanSuggestionPatterns(containerElement);
 
-      detectedSuggestions.forEach(({ element, suggestionText }) => {
-        if (element.querySelector('[data-suggestion-button]') || processedElementsRef.current.has(element)) {
-          return;
-        }
+        detectedSuggestions.forEach(({ element, suggestionText }) => {
+          if (!element.isConnected) {
+            return;
+          }
 
-        processedElementsRef.current.add(element);
-        const suggestionId = generateSuggestionId(suggestionText);
-        
-        const { cleanup } = createSuggestionButton(element, {
-          suggestionText,
-          suggestionId,
-          handlers: {
-            onClick: (cleanSuggestionText, sourceSuggestionId) => {
-              let messageText = cleanSuggestionText;
-              const { lastUserQuestion, lastAssistantResponse } = contextMessages;
-              
-              if (lastUserQuestion || lastAssistantResponse || sourceSuggestionId) {
-                const contextData = JSON.stringify({
-                  lastUserQuestion,
-                  lastAssistantResponse,
-                  sourceSuggestionId,
-                });
-                messageText = `__QWERY_CONTEXT__${contextData}__QWERY_CONTEXT_END__${cleanSuggestionText}`;
-              }
-              
-              sendMessage({ text: messageText }, {});
-              scrollToConversationBottom();
+          if (element.querySelector('[data-suggestion-button]') || processedElementsRef.current.has(element)) {
+            return;
+          }
+
+          processedElementsRef.current.add(element);
+          const suggestionId = generateSuggestionId(suggestionText);
+          
+          const { cleanup } = createSuggestionButton(element, {
+            suggestionText,
+            suggestionId,
+            handlers: {
+              onClick: handleSuggestionClick,
             },
-          },
+          });
+          
+          cleanupFunctions.push(cleanup);
         });
-        
-        cleanupFunctions.push(cleanup);
-      });
+      } catch (error) {
+        console.error('[useSuggestionEnhancement] Error processing suggestions:', error);
+      }
+    };
 
-      return () => {
-        cleanupFunctions.forEach((cleanup) => cleanup());
-        processedElementsRef.current.clear();
-      };
-    } catch (error) {
-      console.error('[useSuggestionEnhancement] Error processing suggestions:', error);
-    }
-  }, [detectedSuggestions, containerRef.current, sendMessage, contextMessages]);
+    rafId = requestAnimationFrame(processSuggestions);
+
+    return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      cleanupFunctions.forEach((cleanup) => cleanup());
+      processedElementsRef.current.clear();
+    };
+  }, [detectedSuggestions, containerElement, sendMessage, handleSuggestionClick]);
 }
 
